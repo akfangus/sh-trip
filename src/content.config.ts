@@ -24,16 +24,14 @@ const landmarks = defineCollection({
         license: z.string(),
         sourceUrl: z.url(),
       }),
-      /** 더 깊이 알아보기 ①: 시대별 역사 */
-      history: z
-        .object({
-          title: z.string(),
-          subtitle: z.string(),
-          eras: z
-            .array(z.object({ era: z.string(), year: z.string(), text: z.string() }))
-            .min(3)
-            .max(8),
-        }),
+      /** 더 깊이 알아보기 ①: 이 명소가 왜 유명한지, 어느 시대에 누가 왜 만들었는지를 이야기로 */
+      history: z.object({
+        title: z.string(),
+        subtitle: z.string(),
+        body: z.string(),
+        /** 전설인지 기록인지 밝히는 출처 한 줄 */
+        source: z.string(),
+      }),
       /** 더 깊이 알아보기 ②③: 재밌는 이야기 */
       stories: z
         .array(

@@ -59,57 +59,33 @@ const visit = (await getVisitedLandmarks()).get(landmark.id);
     {anecdotes.map((a) => <p class="tale">{a}</p>)}
   </section>
 
-  {
-    (
-      <section>
-        <h2>더 깊이 알아보기</h2>
-        <div class="deep">
-          {history && (
-            <details>
-              <summary>
-                <span class="topic">
-                  <b>{history.title}</b>
-                  <span>{history.subtitle}</span>
-                </span>
-                <span class="pm" aria-hidden="true" />
-              </summary>
-              <ol class="eras">
-                {history.eras.map((e) => (
-                  <li>
-                    <p class="era">
-                      <b>{e.era}</b>
-                      <span class="serif">{e.year}</span>
-                    </p>
-                    <p>{e.text}</p>
-                  </li>
+  <section>
+    <h2>더 깊이 알아보기</h2>
+    <div class="deep">
+      {
+        [history, ...stories].map((topic) => (
+          <details>
+            <summary>
+              <span class="topic">
+                <b>{topic.title}</b>
+                <span>{topic.subtitle}</span>
+              </span>
+              <span class="pm" aria-hidden="true" />
+            </summary>
+            <div class="tale-body">
+              {topic.body
+                .trim()
+                .split(/\n\s*\n/)
+                .map((para) => (
+                  <p>{para}</p>
                 ))}
-              </ol>
-            </details>
-          )}
-          {stories?.map((s) => (
-            <details>
-              <summary>
-                <span class="topic">
-                  <b>{s.title}</b>
-                  <span>{s.subtitle}</span>
-                </span>
-                <span class="pm" aria-hidden="true" />
-              </summary>
-              <div class="tale-body">
-                {s.body
-                  .trim()
-                  .split(/\n\s*\n/)
-                  .map((para) => (
-                    <p>{para}</p>
-                  ))}
-                <p class="source">{s.source}</p>
-              </div>
-            </details>
-          ))}
-        </div>
-      </section>
-    )
-  }
+              <p class="source">{topic.source}</p>
+            </div>
+          </details>
+        ))
+      }
+    </div>
+  </section>
 
   <section>
     <h2>가기 전에</h2>
@@ -160,8 +136,11 @@ const visit = (await getVisitedLandmarks()).get(landmark.id);
   h2 {
     margin: 40px 0 14px;
   }
+  /* 이야기 본문: 현장에서 서서 읽으니 본문보다 한 단계 크게 */
   .story :global(p) {
-    margin: 0 0 1em;
+    margin: 0 0 1.1em;
+    font-size: 1.12rem;
+    line-height: 1.8;
   }
   .look {
     list-style: none;
@@ -264,33 +243,12 @@ const visit = (await getVisitedLandmarks()).get(landmark.id);
   .deep details[open] .topic b {
     color: var(--maple);
   }
-  .eras {
-    list-style: none;
-    margin: 0;
-    padding: 0 18px 8px;
-  }
-  .eras li {
-    padding: 0 0 16px;
-  }
-  .eras p {
-    margin: 0;
-  }
-  .era {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-  }
-  .era b {
-    color: var(--beam);
-  }
-  .era span {
-    color: var(--ink-soft);
-  }
   .tale-body {
     padding: 0 18px 18px;
   }
   .tale-body p {
     margin: 0 0 14px;
+    line-height: 1.75;
   }
   .tale-body .source {
     margin: 0;
