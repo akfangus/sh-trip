@@ -72,8 +72,10 @@
       status: planned
       landmark: gion
     - time: "18:00"
-      title: 지사이쿄우만 기온 저녁
+      title: 지사이쿄우만 기온 저녁 (時菜 今日萬 祇園)
       status: reserved
+      note: 장어·일본 요리. 기온시조역에서 걸어서 5분
+      mapsUrl: https://www.google.com/maps/search/?api=1&query=%E6%99%82%E8%8F%9C%20%E4%BB%8A%E6%97%A5%E8%90%AC%20%E7%A5%87%E5%9C%92%20%E4%BA%AC%E9%83%BD%E5%B8%82%E6%9D%B1%E5%B1%B1%E5%8C%BA
     - time: "19:30~20:30"
       title: 야사카 신사·마루야마 공원 야경 산책
       status: planned
@@ -129,8 +131,10 @@
       title: 저녁 식당으로 이동, 휴식
       status: planned
     - time: "18:45"
-      title: 스시도코로 스사비유 저녁
+      title: 스시도코로 스사비유 저녁 (鮨処 すさび湯)
       status: reserved
+      note: 기온이 아니라 시조 가라스마 쪽. 산넨자카에서 택시로 15~20분
+      mapsUrl: https://www.google.com/maps/search/?api=1&query=%E9%AE%A8%E5%87%A6%20%E3%81%99%E3%81%95%E3%81%B3%E6%B9%AF%20%E4%BA%AC%E9%83%BD%E5%B8%82%E4%B8%8B%E4%BA%AC%E5%8C%BA
     - title: 식사 후 숙소 복귀
       status: planned
 
