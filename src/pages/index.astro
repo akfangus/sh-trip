@@ -1,308 +1,321 @@
 ---
 import { Image } from 'astro:assets';
 import { getCollection, getEntry } from 'astro:content';
+import DayPlan from '../components/DayPlan.astro';
 import Base from '../layouts/Base.astro';
-import { formatDate, getDays, getVisitedLandmarks } from '../lib/content';
+import { formatDateLong, getDays, getVisitedLandmarks, PERIOD_LABEL } from '../lib/content';
 
 const days = await getDays();
 const visited = await getVisitedLandmarks();
 const landmarks = new Map((await getCollection('landmarks')).map((l) => [l.id, l]));
-const going = [...visited.keys()].map((id) => landmarks.get(id)!);
-const heroImage = (await getEntry('landmarks', 'fushimi-inari'))!.data.image;
-
-/** 홈의 "오늘" 요약에 올릴 항목: 예약 식사와 명소 방문, 정시 일정(항공편) */
-const keyItems = (day: (typeof days)[number]) =>
-  day.data.items.filter((i) => i.status === 'reserved' || i.status === 'fixed' || i.landmark);
-
-const shortcuts = [
-  { href: '/itinerary/', title: '전체 일정', desc: 'Day 1~4 시간표', icon: '<rect x="4" y="5" width="16" height="15" rx="1.5"/><path d="M4 10h16M9 3v4M15 3v4"/>' },
-  { href: '/landmarks/', title: '교토 명소', desc: '현장에서 읽는 해설', icon: '<path d="M2.5 6.5c3.5 1.3 15.5 1.3 19 0l-.6 2.6c-4.3.9-13.5.9-17.8 0z"/><path d="M5 12h14M7.5 9v12M16.5 9v12"/>' },
-  { href: '/basics/', title: '보여주는 일본어', desc: '눌러서 크게 보여주기', icon: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>' },
-  { href: '/basics/#hotel', title: '숙소 주소', desc: '택시 기사에게 보여주기', icon: '<path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/>' },
-];
+const [first, ...rest] = [...visited.keys()].map((id) => landmarks.get(id)!);
+const backdrop = (await getEntry('landmarks', 'kiyomizudera'))!.data.image;
+const firstDate = formatDateLong(days[0].data.date);
+const lastDate = formatDateLong(days[days.length - 1].data.date).replace(/^\d+월 /, '');
 ---
 
-<Base title="홈" tab="home" bleed>
-  <header class="hero">
-    <Image src={heroImage} alt="" width={900} quality={60} class="hero-img" loading="eager" />
-    <div class="hero-text">
-      <p class="hero-kicker serif">京都 · 우리 가족 가을 여행</p>
-      <h1>교토여행</h1>
-      <p class="hero-dates">{formatDate(days[0].data.date)} — {formatDate(days[days.length - 1].data.date)}</p>
-      <p class="hero-status serif" data-status></p>
-    </div>
+<Base title="홈" tab="home" backdrop={backdrop}>
+  <header class="page-head">
+    <h1 class="on-photo">교토여행</h1>
+    <p class="on-photo">{firstDate}부터 {lastDate}까지</p>
   </header>
 
+  <p class="status wall on-backdrop" aria-live="polite">
+    <b class="serif" data-status-big>첫날</b>
+    <span data-status-text>일정을 미리 볼까요?</span>
+  </p>
+
+  <section class="days" aria-label="날짜별 일정">
+    <div class="days-nav">
+      <button class="nav" type="button" data-step="-1" aria-label="이전 날">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>
+      </button>
+      <h2 data-day-title>1일째 {formatDateLong(days[0].data.date).replace(/^\d+월 \d+일 /, '')}</h2>
+      <button class="nav" type="button" data-step="1" aria-label="다음 날">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>
+      </button>
+    </div>
+    <div class="dots" aria-hidden="true">
+      {days.map((d) => <i data-dot={d.data.day} />)}
+    </div>
+    <div class="track" data-track>
+      {
+        days.map((day) => (
+          <article
+            class="panel"
+            data-panel={day.data.day}
+            data-title={`${day.data.day}일째 ${formatDateLong(day.data.date).replace(/^\d+월 \d+일 /, '')}`}
+          >
+            <DayPlan day={day} compact />
+            <a class="more" href={`/itinerary/#day${day.data.day}`}>
+              {day.data.day}일째 일정 자세히 보기
+            </a>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <h2 class="section-title">이번 여행에서 가는 곳</h2>
   {
-    days.map((day) => (
-      <section class="today" data-today-day={day.data.day} hidden={day.data.day !== 1}>
-        <div class="section-head">
-          <h2 data-today-title>
-            Day {day.data.day} · {day.data.title}
-          </h2>
-          <a class="more" href={`/itinerary/#day${day.data.day}`}>
-            전체 보기 ›
-          </a>
-        </div>
-        <ol class="key-items">
-          {keyItems(day).map((item) => {
-            const lm = item.landmark && landmarks.get(item.landmark.id);
-            return (
-              <li class:list={[item.status]}>
-                <span class="time">{item.time?.split('~')[0]}</span>
-                <span class="what">
-                  {lm ? (
-                    <a href={`/landmarks/${lm.id}/`}>{item.title}</a>
-                  ) : (
-                    item.title
-                  )}
-                  {item.status === 'reserved' && <span class="tag">예약</span>}
-                </span>
-              </li>
-            );
-          })}
-        </ol>
-      </section>
-    ))
+    first && (
+      <a class="big" href={`/landmarks/${first.id}/`}>
+        <Image src={first.data.image} alt="" width={800} quality={60} />
+        <span class="big-text">
+          <span class="when">
+            {visited.get(first.id)!.day}일째 {PERIOD_LABEL[visited.get(first.id)!.period]}
+          </span>
+          <strong class="serif">{first.data.nameKo}</strong>
+          <span class="muted">{first.data.summary}</span>
+        </span>
+      </a>
+    )
   }
-
-  <div class="section-head">
-    <h2>우리가 가는 곳</h2>
-    <a class="more" href="/landmarks/">모두 보기 ›</a>
-  </div>
-  <div class="rail" role="list">
+  <div class="grid">
     {
-      going.map((l) => (
-        <a class="rail-card" href={`/landmarks/${l.id}/`} role="listitem">
-          <Image src={l.data.image} alt="" width={440} quality={60} />
-          <span class="rail-day">Day {visited.get(l.id)}</span>
-          <span class="rail-name serif">{l.data.nameKo}</span>
+      rest.map((l) => (
+        <a class="small" href={`/landmarks/${l.id}/`}>
+          <Image src={l.data.image} alt="" width={400} quality={60} />
+          <span class="when">
+            {visited.get(l.id)!.day}일째 {PERIOD_LABEL[visited.get(l.id)!.period]}
+          </span>
+          <strong class="serif">{l.data.nameKo}</strong>
         </a>
       ))
     }
   </div>
 
-  <div class="section-head">
-    <h2>바로가기</h2>
-  </div>
-  <div class="shortcuts">
-    {
-      shortcuts.map((s) => (
-        <a href={s.href} class="shortcut">
-          <svg viewBox="0 0 24 24" aria-hidden="true" set:html={s.icon} />
-          <strong class="serif">{s.title}</strong>
-          <span class="muted">{s.desc}</span>
-        </a>
-      ))
-    }
-  </div>
+  <a class="hotel-link wall" href="/basics/#hotel">
+    <span>
+      <strong>숙소 주소 보여주기</strong>
+      <span class="muted">택시 기사님께 일본어 주소를 보여드려요</span>
+    </span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>
+  </a>
 </Base>
 
 <script>
   import { tripDayOf } from '../lib/tripDay';
 
+  const COUNT = ['', '하루', '이틀', '사흘', '나흘', '닷새', '엿새', '이레'];
   const today = tripDayOf(new Date());
-  const status = document.querySelector<HTMLElement>('[data-status]')!;
-  status.textContent =
-    today.kind === 'before'
-      ? `출발까지 D-${today.daysLeft}`
-      : today.kind === 'day'
-        ? `오늘은 여행 ${today.day}일째`
-        : '즐거운 여행이었어요';
+  const big = document.querySelector<HTMLElement>('[data-status-big]')!;
+  const text = document.querySelector<HTMLElement>('[data-status-text]')!;
+  if (today.kind === 'before') {
+    big.textContent = COUNT[today.daysLeft] ?? `${today.daysLeft}일`;
+    text.textContent = '남았어요. 첫날 일정을 미리 볼까요?';
+  } else if (today.kind === 'day') {
+    big.textContent = `${today.day}일째`;
+    text.textContent = '오늘 일정이에요. 옆으로 밀면 다른 날도 보여요.';
+  } else {
+    big.textContent = '다녀왔어요';
+    text.textContent = '즐거운 여행이었어요.';
+  }
 
-  // 여행 전에는 첫날, 여행 중에는 오늘, 여행 후에는 요약을 숨긴다.
-  const showDay = today.kind === 'day' ? today.day : today.kind === 'before' ? 1 : null;
-  document.querySelectorAll<HTMLElement>('[data-today-day]').forEach((el) => {
-    el.hidden = Number(el.dataset.todayDay) !== showDay;
-    if (!el.hidden && today.kind === 'day') {
-      const title = el.querySelector('[data-today-title]');
-      if (title) title.textContent = `오늘 · ${title.textContent?.split('·').slice(1).join('·').trim()}`;
-    }
-  });
+  // 날짜별 일정: 옆으로 밀어 넘기기 (스크롤 스냅) + 이전/다음 버튼 + 점 표시
+  const track = document.querySelector<HTMLElement>('[data-track]')!;
+  const panels = [...track.querySelectorAll<HTMLElement>('[data-panel]')];
+  const dots = [...document.querySelectorAll<HTMLElement>('[data-dot]')];
+  const title = document.querySelector<HTMLElement>('[data-day-title]')!;
+  let current = 1;
+
+  function mark(day: number) {
+    current = day;
+    dots.forEach((d) => d.classList.toggle('on', Number(d.dataset.dot) === day));
+    title.textContent = panels[day - 1].dataset.title ?? '';
+    // 보이는 날의 높이에 맞춰 트랙 높이를 바꾼다 (짧은 날 아래 빈 공간 방지)
+    track.style.height = `${panels[day - 1].offsetHeight}px`;
+  }
+  function go(day: number, smooth = true) {
+    const d = Math.min(Math.max(day, 1), panels.length);
+    track.scrollTo({ left: panels[d - 1].offsetLeft - track.offsetLeft, behavior: smooth ? 'smooth' : 'auto' });
+    mark(d);
+  }
+
+  const io = new IntersectionObserver(
+    (entries) => entries.forEach((e) => e.isIntersecting && mark(Number((e.target as HTMLElement).dataset.panel))),
+    { root: track, threshold: 0.6 },
+  );
+  panels.forEach((p) => io.observe(p));
+  document.querySelectorAll<HTMLButtonElement>('[data-step]').forEach((b) =>
+    b.addEventListener('click', () => go(current + Number(b.dataset.step))),
+  );
+  go(today.kind === 'day' ? today.day : 1, false);
 </script>
 
 <style>
-  .hero {
-    position: relative;
-    margin: 0 calc(-1 * var(--gutter));
-    min-height: 62vh;
+  .page-head {
+    padding-top: 150px;
+  }
+  .page-head h1 {
+    margin: 0;
+  }
+  .page-head p {
+    margin: 4px 0 0;
+    font-weight: 600;
+  }
+  .status {
     display: flex;
-    align-items: flex-end;
-    color: #fff;
-    overflow: hidden;
-  }
-  .hero :global(.hero-img) {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .hero::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, #0000 30%, #1b0f0acc 100%);
-  }
-  .hero-text {
-    position: relative;
-    z-index: 1;
-    padding: 0 var(--gutter) 28px;
-  }
-  .hero-kicker {
-    margin: 0;
-    font-size: 0.9rem;
-    font-weight: 600;
-    opacity: 0.9;
-    letter-spacing: 0.04em;
-  }
-  .hero h1 {
-    font-size: 2.8rem;
-    margin: 2px 0 4px;
-    letter-spacing: 0.02em;
-  }
-  .hero-dates {
-    margin: 0;
-    font-weight: 600;
-    opacity: 0.95;
-  }
-  .hero-status {
-    display: inline-block;
-    margin: 14px 0 0;
-    padding: 4px 14px;
-    background: var(--vermilion);
-    font-size: 1.05rem;
-    border-radius: 2px;
-  }
-  .hero-status:empty {
-    display: none;
-  }
-  .key-items {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    border-top: 1px solid var(--rule);
-  }
-  .key-items li {
-    display: grid;
-    grid-template-columns: 4.2em 1fr;
-    gap: 12px;
-    padding: 14px 0;
-    border-bottom: 1px solid var(--rule);
-    align-items: baseline;
-  }
-  .key-items .time {
-    font-family: var(--serif);
-    font-weight: 800;
-    font-variant-numeric: tabular-nums;
-    color: var(--ink-soft);
-  }
-  .key-items .reserved .time {
-    color: var(--vermilion);
-  }
-  .key-items .what {
+    align-items: center;
+    gap: 16px;
+    margin: 20px 0 0;
     font-weight: 700;
+    line-height: 1.45;
   }
-  .key-items a {
-    color: var(--ink);
-    text-decoration-color: var(--vermilion);
-    text-decoration-thickness: 2px;
-    text-underline-offset: 4px;
-  }
-  .key-items .tag {
-    margin-left: 8px;
-    vertical-align: 2px;
-  }
-  .rail {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: var(--gutter);
-    margin: 0 calc(-1 * var(--gutter));
-    padding: 0 var(--gutter) 6px;
-    scrollbar-width: none;
-  }
-  .rail::-webkit-scrollbar {
-    display: none;
-  }
-  .rail-card {
-    position: relative;
+  .status b {
     flex: none;
-    width: 62%;
-    max-width: 240px;
-    aspect-ratio: 3 / 4;
-    scroll-snap-align: start;
-    border-radius: 4px;
-    overflow: hidden;
-    color: #fff;
-    text-decoration: none;
+    font-size: 2.1rem;
+    line-height: 1;
+    color: var(--maple);
   }
-  .rail-card :global(img) {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  .days {
+    margin-top: 30px;
   }
-  .rail-card::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, #0000 45%, #120a06d9 100%);
-  }
-  .rail-day,
-  .rail-name {
-    position: absolute;
-    z-index: 1;
-    left: 14px;
-  }
-  .rail-day {
-    top: 12px;
-    padding: 0 8px;
-    font-size: 0.8rem;
-    font-weight: 800;
-    background: var(--vermilion);
-    border-radius: 2px;
-  }
-  .rail-name {
-    bottom: 14px;
-    right: 14px;
-    font-size: 1.25rem;
-    line-height: 1.3;
-  }
-  .shortcuts {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1px;
-    background: var(--rule);
-    border: 1px solid var(--rule);
-  }
-  .shortcut {
+  .days-nav {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-height: 128px;
-    padding: 16px;
-    background: var(--sheet);
-    color: var(--ink);
-    text-decoration: none;
+    align-items: center;
+    justify-content: space-between;
   }
-  .shortcut svg {
-    width: 30px;
-    height: 30px;
-    margin-bottom: 8px;
+  .days-nav h2 {
+    margin: 0;
+    font-size: 1.35rem;
+    text-align: center;
+  }
+  .nav {
+    display: grid;
+    place-items: center;
+    width: var(--tap);
+    height: var(--tap);
+    border: 0;
+    background: var(--wall-glass);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .nav svg {
+    width: 22px;
+    height: 22px;
     fill: none;
-    stroke: var(--vermilion);
-    stroke-width: 1.7;
+    stroke: currentColor;
+    stroke-width: 2.4;
     stroke-linecap: round;
     stroke-linejoin: round;
   }
-  .shortcut strong {
-    font-size: 1.08rem;
+  .dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin: 10px 0 18px;
   }
-  .shortcut span {
-    font-size: 0.85rem;
-    line-height: 1.4;
+  .dots i {
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--pebble);
+    transition: width 0.25s ease;
+  }
+  .dots i.on {
+    width: 24px;
+    background: var(--beam);
+  }
+  .track {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    align-items: flex-start;
+    transition: height 0.25s ease;
+  }
+  .track::-webkit-scrollbar {
+    display: none;
+  }
+  .panel {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+  }
+  .more {
+    display: flex;
+    align-items: center;
+    min-height: var(--tap);
+    margin-top: 10px;
+    font-weight: 700;
+  }
+  .section-title {
+    margin-top: 44px;
+  }
+  .big,
+  .small {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .big {
+    display: block;
+  }
+  .big :global(img) {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+  }
+  .big-text {
+    display: flex;
+    flex-direction: column;
+    background: var(--wall);
+    padding: 14px 16px 16px;
+    line-height: 1.45;
+  }
+  .big strong {
+    font-size: 1.45rem;
+    line-height: 1.3;
+  }
+  .when {
+    font-size: var(--text-small);
+    font-weight: 700;
+    color: var(--beam);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 12px;
+    margin-top: 18px;
+  }
+  .small {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.35;
+  }
+  .small :global(img) {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    margin-bottom: 8px;
+  }
+  .small strong {
+    font-size: 1.1rem;
+  }
+  .hotel-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 36px;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .hotel-link > span {
+    display: flex;
+    flex-direction: column;
+  }
+  .hotel-link .muted {
+    font-size: var(--text-small);
+  }
+  .hotel-link svg {
+    width: 22px;
+    height: 22px;
+    flex: none;
+    fill: none;
+    stroke: var(--ink-soft);
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 </style>

@@ -24,19 +24,44 @@ const landmarks = defineCollection({
         license: z.string(),
         sourceUrl: z.url(),
       }),
+      /** 더 깊이 알아보기 ①: 시대별 역사 */
+      history: z
+        .object({
+          title: z.string(),
+          subtitle: z.string(),
+          eras: z
+            .array(z.object({ era: z.string(), year: z.string(), text: z.string() }))
+            .min(3)
+            .max(8),
+        })
+        .optional(),
+      /** 더 깊이 알아보기 ②③: 재밌는 이야기 */
+      stories: z
+        .array(
+          z.object({
+            title: z.string(),
+            subtitle: z.string(),
+            body: z.string(),
+            /** 전설인지 기록인지 밝히는 출처 한 줄 */
+            source: z.string(),
+          }),
+        )
+        .length(2)
+        .optional(),
     }),
 });
 
 const itemStatus = z.enum([
-  /** 예약 확정: 배지 + 구글맵 버튼 */
+  /** 예약 확정: 시각 + 예약 표시 + 구글맵 버튼 */
   'reserved',
-  /** 정시(항공편 등): 시간 그대로 표시 */
+  /** 정시(비행기, 하루카): 시각 표시 */
   'fixed',
-  /** 예정·예상: "약 ○○시" */
+  /** 예정: 시각 없이 시간대 칸 안에 순서대로 */
   'planned',
-  /** 선택: "선택" 배지 + "약 ○○시" */
-  'optional',
 ]);
+
+/** 하루를 나누는 칸 */
+export const PERIODS = ['morning', 'afternoon', 'evening'] as const;
 
 /** 일자별 일정. 명소를 참조하면 그 명소가 "가는 곳"이 된다. */
 const itinerary = defineCollection({
@@ -47,9 +72,16 @@ const itinerary = defineCollection({
     title: z.string(),
     items: z.array(
       z.object({
-        time: z.string().optional(),
+        period: z.enum(PERIODS),
+        /** 가는 곳(place) / 먹는 것(meal) / 큰 이동(move) */
+        kind: z.enum(['place', 'meal', 'move']),
         title: z.string(),
         status: itemStatus,
+        /** 예약·정시 항목만: "18:00" */
+        time: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+        /** 장소 구성, 메뉴 등 한 줄 설명 */
+        detail: z.string().optional(),
+        /** 행동에 도움이 되는 메모 */
         note: z.string().optional(),
         landmark: reference('landmarks').optional(),
         mapsUrl: z.url().optional(),

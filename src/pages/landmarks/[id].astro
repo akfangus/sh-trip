@@ -1,7 +1,8 @@
 ---
-import { Image } from 'astro:assets';
 import { getCollection, render } from 'astro:content';
+import Icon from '../../components/Icon.astro';
 import Base from '../../layouts/Base.astro';
+import { formatDateLong, getVisitedLandmarks, PERIOD_LABEL } from '../../lib/content';
 
 export async function getStaticPaths() {
   const landmarks = await getCollection('landmarks');
@@ -9,24 +10,30 @@ export async function getStaticPaths() {
 }
 
 const { landmark } = Astro.props;
-const { nameKo, nameJa, summary, highlights, anecdotes, hours, fee, mapsUrl, image, imageCredit } =
+const { nameKo, nameJa, summary, highlights, anecdotes, hours, fee, mapsUrl, image, imageCredit, history, stories } =
   landmark.data;
 const { Content } = await render(landmark);
+const visit = (await getVisitedLandmarks()).get(landmark.id);
 ---
 
-<Base title={nameKo} tab="landmarks" back={{ href: '/landmarks/', label: '교토 명소' }}>
-  <figure class="hero">
-    <Image src={image} alt={nameKo} width={800} quality={60} />
-    <figcaption class="muted">
-      사진: <a href={imageCredit.sourceUrl} target="_blank" rel="noopener">{imageCredit.author}</a>, {
-        imageCredit.license
-      }
-    </figcaption>
-  </figure>
+<Base title={nameKo} tab="landmarks" back={{ href: '/landmarks/', label: '교토 명소' }} bleed backdrop={image}>
+  <header class="page-head">
+    <p class="ja on-photo" lang="ja">{nameJa}</p>
+    <h1 class="on-photo">{nameKo}</h1>
+  </header>
 
-  <h1>{nameKo}</h1>
-  <p class="ja muted" lang="ja">{nameJa}</p>
-  <p class="summary">{summary}</p>
+  {
+    visit && (
+      <a class="when" href={`/itinerary/#day${visit.day}`}>
+        <b class="serif">
+          {visit.day}일째 {PERIOD_LABEL[visit.period]}에 가요
+        </b>
+        <span>{formatDateLong(visit.date)}</span>
+      </a>
+    )
+  }
+
+  <p class="summary serif">{summary}</p>
 
   <section>
     <h2>이야기</h2>
@@ -35,72 +42,270 @@ const { Content } = await render(landmark);
 
   <section>
     <h2>여기서 꼭 볼 것</h2>
-    <ol class="highlights">
-      {highlights.map((h) => <li>{h}</li>)}
-    </ol>
+    <ul class="look wall">
+      {
+        highlights.map((h) => (
+          <li>
+            <Icon name="look" />
+            <span>{h}</span>
+          </li>
+        ))
+      }
+    </ul>
   </section>
 
   <section>
     <h2>알아두면 재밌는 이야기</h2>
-    {anecdotes.map((a) => <p class="anecdote card">{a}</p>)}
+    {anecdotes.map((a) => <p class="tale">{a}</p>)}
   </section>
 
+  {
+    (history || stories) && (
+      <section>
+        <h2>더 깊이 알아보기</h2>
+        <div class="deep">
+          {history && (
+            <details>
+              <summary>
+                <span class="topic">
+                  <b>{history.title}</b>
+                  <span>{history.subtitle}</span>
+                </span>
+                <span class="pm" aria-hidden="true" />
+              </summary>
+              <ol class="eras">
+                {history.eras.map((e) => (
+                  <li>
+                    <p class="era">
+                      <b>{e.era}</b>
+                      <span class="serif">{e.year}</span>
+                    </p>
+                    <p>{e.text}</p>
+                  </li>
+                ))}
+              </ol>
+            </details>
+          )}
+          {stories?.map((s) => (
+            <details>
+              <summary>
+                <span class="topic">
+                  <b>{s.title}</b>
+                  <span>{s.subtitle}</span>
+                </span>
+                <span class="pm" aria-hidden="true" />
+              </summary>
+              <div class="tale-body">
+                {s.body
+                  .trim()
+                  .split(/\n\s*\n/)
+                  .map((para) => (
+                    <p>{para}</p>
+                  ))}
+                <p class="source">{s.source}</p>
+              </div>
+            </details>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
   <section>
-    <h2>기본 정보</h2>
-    <dl class="info card">
+    <h2>가기 전에</h2>
+    <dl class="info wall">
       <dt>운영시간</dt>
       <dd>{hours}</dd>
       <dt>입장료</dt>
       <dd>{fee}</dd>
     </dl>
     <p class="muted small">운영시간과 요금은 바뀔 수 있어요.</p>
-    <a class="btn primary wide" href={mapsUrl} target="_blank" rel="noopener">구글맵에서 열기</a>
+    <a class="btn primary wide" href={mapsUrl} target="_blank" rel="noopener">구글맵에서 길 찾기</a>
+    <p class="credit muted">
+      사진: <a href={imageCredit.sourceUrl} target="_blank" rel="noopener">{imageCredit.author}</a>, {
+        imageCredit.license
+      }
+    </p>
   </section>
 </Base>
 
 <style>
-  .hero {
-    margin: 0 -16px 16px;
+  .page-head {
+    padding-top: 230px;
   }
-  .hero :global(img) {
-    width: 100%;
-    aspect-ratio: 3 / 2;
-    object-fit: cover;
-  }
-  figcaption {
-    font-size: 0.75rem;
-    padding: 4px 16px 0;
-  }
-  figcaption a {
-    color: inherit;
-  }
-  .ja {
+  .page-head .ja {
     margin: 0;
+    font-weight: 700;
+  }
+  .page-head h1 {
+    margin: 0;
+    font-size: 2.6rem;
+    line-height: 1.1;
+  }
+  .when {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 18px;
+    padding: 14px 18px;
+    background: var(--beam);
+    color: #fff;
+    text-decoration: none;
+  }
+  .when b {
+    font-size: 1.1rem;
+  }
+  .when span {
+    font-size: var(--text-small);
+    color: #f1e3d6;
   }
   .summary {
-    font-size: 1.15rem;
-    font-weight: 700;
-    margin: 12px 0 0;
-    padding-left: 12px;
-    border-left: 4px solid var(--accent);
+    font-size: 1.3rem;
+    line-height: 1.45;
+    margin: 26px 0 0;
+  }
+  h2 {
+    margin: 40px 0 14px;
   }
   .story :global(p) {
     margin: 0 0 1em;
   }
-  .highlights {
-    padding-left: 1.4em;
+  .look {
+    list-style: none;
+    margin: 0;
+    padding: 4px 18px;
+  }
+  .look li {
+    display: flex;
+    gap: 12px;
+    padding: 14px 0;
+  }
+  .look :global(.icon) {
+    margin-top: 2px;
+    color: var(--beam);
+  }
+  .tale {
+    margin: 0 0 10px;
+    padding: 18px 20px;
+    background: var(--beam);
+    color: #fff;
+    line-height: 1.7;
+  }
+
+  /* 더 깊이 알아보기: 처음엔 모두 접혀 있고, 누르면 부드럽게 펼쳐진다 */
+  .deep {
+    background: var(--wall);
+    interpolate-size: allow-keywords;
+  }
+  .deep details + details {
+    border-top: 3px solid var(--ground);
+  }
+  .deep details::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition:
+      block-size 0.3s ease,
+      content-visibility 0.3s allow-discrete;
+  }
+  .deep details[open]::details-content {
+    block-size: auto;
+  }
+  .deep summary {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 76px;
+    padding: 12px 18px;
+    list-style: none;
+    cursor: pointer;
+  }
+  .deep summary::-webkit-details-marker {
+    display: none;
+  }
+  .topic {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.4;
+  }
+  .topic b {
+    font-size: 1.05rem;
+  }
+  .topic span {
+    font-size: var(--text-small);
+    color: var(--ink-soft);
+  }
+  .pm {
+    position: relative;
+    flex: none;
+    width: 36px;
+    height: 36px;
+    background: var(--stone);
+    transition: background-color 0.2s ease;
+  }
+  .pm::before,
+  .pm::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 16px;
+    height: 3px;
+    margin: -1.5px 0 0 -8px;
+    background: var(--ink);
+    transition: transform 0.25s ease;
+  }
+  .pm::after {
+    transform: rotate(90deg);
+  }
+  .deep details[open] .pm {
+    background: var(--maple);
+  }
+  .deep details[open] .pm::before,
+  .deep details[open] .pm::after {
+    background: #fff;
+  }
+  .deep details[open] .pm::after {
+    transform: rotate(0deg);
+  }
+  .deep details[open] .topic b {
+    color: var(--maple);
+  }
+  .eras {
+    list-style: none;
+    margin: 0;
+    padding: 0 18px 8px;
+  }
+  .eras li {
+    padding: 0 0 16px;
+  }
+  .eras p {
     margin: 0;
   }
-  .highlights li {
-    margin-bottom: 10px;
+  .era {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
   }
-  .highlights li::marker {
-    color: var(--accent);
-    font-weight: 800;
+  .era b {
+    color: var(--beam);
   }
-  .anecdote {
-    margin: 0 0 12px;
+  .era span {
+    color: var(--ink-soft);
   }
+  .tale-body {
+    padding: 0 18px 18px;
+  }
+  .tale-body p {
+    margin: 0 0 14px;
+  }
+  .tale-body .source {
+    margin: 0;
+    font-size: var(--text-small);
+    color: var(--ink-soft);
+  }
+
   .info {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -109,16 +314,24 @@ const { Content } = await render(landmark);
   }
   dt {
     font-weight: 700;
-    color: var(--muted);
+    color: var(--ink-soft);
   }
   dd {
     margin: 0;
   }
   .small {
-    font-size: 0.85rem;
-    margin: 0 0 16px;
+    font-size: var(--text-small);
+    margin: 0 0 14px;
   }
   .wide {
     width: 100%;
+    min-height: 56px;
+  }
+  .credit {
+    margin: 22px 0 0;
+    font-size: var(--text-small);
+  }
+  .credit a {
+    color: inherit;
   }
 </style>

@@ -1,164 +1,163 @@
-# 일정표 원본: 사용자 제공 (2026-11-04). 시간은 모두 JST.
-# status: reserved(예약 확정) / fixed(정시) / planned(예정·예상) / optional(선택)
+# 일정표: 사용자 원본(2026-11-04)을 오전/오후/저녁으로 다시 묶었다. 시간은 모두 JST.
+# period: morning(오전) / afternoon(오후) / evening(저녁)
+# kind: place(가는 곳) / meal(먹는 것) / move(큰 이동)
+# status: reserved(예약 확정, 시각 표시) / fixed(비행기·하루카, 시각 표시) / planned(시각 없음)
 # landmark: src/content/landmarks/<id>.md 를 참조하면 해설로 연결되고 "가는 곳"이 된다.
 
 - id: day1
   day: 1
   date: "2026-11-05"
-  title: 입국 및 숙소
+  title: 교토에 도착해요
   items:
-    - time: "14:10"
+    - period: afternoon
+      kind: move
+      status: fixed
+      time: "14:10"
       title: 인천공항 출발
+    - period: afternoon
+      kind: move
       status: fixed
-    - time: "16:00"
+      time: "16:00"
       title: 간사이공항 도착
-      status: fixed
-    - time: "16:00~17:30"
-      title: 입국심사, 짐 찾기, 하루카 탑승 준비
+      detail: 입국심사와 짐 찾기
+    - period: evening
+      kind: move
       status: planned
-    - time: "17:30~19:00"
-      title: 하루카로 교토역 → 숙소 체크인
-      status: planned
-      note: 열차 시각은 유동적
-    - time: "19:30"
-      title: 우메코지 카덴쇼 가이세키 저녁 (숙소)
+      title: 하루카 타고 교토로, 숙소 체크인
+      note: 열차 시각은 공항에서 정해요
+    - period: evening
+      kind: meal
       status: reserved
+      time: "19:30"
+      title: 우메코지 카덴쇼 가이세키
+      detail: 숙소에서 먹는 교토 코스 요리
       mapsUrl: https://www.google.com/maps/search/?api=1&query=%E6%A2%85%E5%B0%8F%E8%B7%AF%E8%8A%B1%E4%BC%9D%E6%8A%84
-    - time: "21:00~"
-      title: 온천·휴식, 컨디션 따라 주변 산책
-      status: optional
+    - period: evening
+      kind: place
+      status: planned
+      title: 숙소 온천에서 쉬기
+      detail: 천연온천 대욕장 스이메이노유
 
 - id: day2
   day: 2
   date: "2026-11-06"
-  title: 아라시야마 · 니시키 시장 · 기온
+  title: 아라시야마와 기온
   items:
-    - time: "09:00~10:00"
-      title: 도게츠교·강변 산책
+    - period: morning
+      kind: place
       status: planned
+      title: 아라시야마
+      detail: 도게츠교, 대나무숲, 노노미야 신사
       landmark: arashiyama
-    - time: "10:00~12:00"
-      title: 대나무숲·노노미야 신사
+    - period: afternoon
+      kind: meal
       status: planned
-      landmark: arashiyama
-    - time: "12:00~13:00"
-      title: 아라시야마 점심
+      title: 아라시야마에서 점심
+      detail: 가게는 현장에서 골라요
+    - period: afternoon
+      kind: place
       status: planned
-      note: 식당 미정
-    - time: "13:00~14:00"
-      title: 부모님 인력거 45분 체험
+      title: 인력거 체험
+      note: 부모님 두 분만 타요
+    - period: afternoon
+      kind: place
       status: planned
-      note: 부모님 두 분만 탑승, 시간 미확정
-    - time: "14:00~15:00"
-      title: 아라시야마 상점가·카페
+      title: 아라시야마 상점가와 카페
+    - period: afternoon
+      kind: place
       status: planned
-    - time: "15:00~15:45"
-      title: 가와라마치로 이동
-      status: planned
-    - time: "15:45~16:25"
-      title: 니시키 시장 구경
-      status: planned
+      title: 니시키 시장
+      note: 걸으면서 먹지 않아요
       landmark: nishiki-market
-    - time: "16:25~16:50"
-      title: 가모강·시조대교 산책
+    - period: afternoon
+      kind: place
       status: planned
+      title: 기온 산책
+      detail: 가모강, 시라카와, 하나미코지
       landmark: gion
-    - time: "16:50~17:15"
-      title: 기온 시라카와 산책
-      status: planned
-      landmark: gion
-    - time: "17:15~17:45"
-      title: 하나미코지 산책, 저녁 식당으로
-      status: planned
-      landmark: gion
-    - time: "18:00"
-      title: 지사이쿄우만 기온 저녁 (時菜 今日萬 祇園)
+    - period: evening
+      kind: meal
       status: reserved
-      note: 장어·일본 요리. 기온시조역에서 걸어서 5분
+      time: "18:00"
+      title: 지사이쿄우만 기온 (時菜 今日萬 祇園)
+      detail: 장어·일본 요리
+      note: 기온시조역에서 걸어서 5분
       mapsUrl: https://www.google.com/maps/search/?api=1&query=%E6%99%82%E8%8F%9C%20%E4%BB%8A%E6%97%A5%E8%90%AC%20%E7%A5%87%E5%9C%92%20%E4%BA%AC%E9%83%BD%E5%B8%82%E6%9D%B1%E5%B1%B1%E5%8C%BA
-    - time: "19:30~20:30"
-      title: 야사카 신사·마루야마 공원 야경 산책
+    - period: evening
+      kind: place
       status: planned
+      title: 야사카 신사 야경
+      detail: 마루야마 공원까지 천천히
       landmark: yasaka-shrine
-    - time: "20:30~"
-      title: 숙소 복귀
-      status: planned
 
 - id: day3
   day: 3
   date: "2026-11-07"
-  title: 후시미 이나리 · 은각사 · 청수사
+  title: 후시미 이나리와 히가시야마
   items:
-    - time: "07:30~08:30"
-      title: 후시미 이나리 신사 (센본토리이)
+    - period: morning
+      kind: place
       status: planned
-      note: 정상 등산은 생략
+      title: 후시미 이나리 신사
+      detail: 센본토리이
+      note: 정상까지는 안 올라가요
       landmark: fushimi-inari
-    - time: "08:30~09:45"
-      title: 야마모토 멘조우로 이동
-      status: planned
-      note: 09:45 도착 목표
-    - time: "10:00"
+    - period: morning
+      kind: meal
+      status: reserved
+      time: "10:00"
       title: 야마모토 멘조우 우동
-      status: reserved
+      detail: 교토 사람들도 줄 서는 우동집
       mapsUrl: https://www.google.com/maps/search/?api=1&query=%E5%B1%B1%E5%85%83%E9%BA%BA%E8%94%B5
-    - time: "11:15~11:50"
-      title: 은각사로 이동
+    - period: afternoon
+      kind: place
       status: planned
-    - time: "11:50~13:00"
-      title: 은각사 관람
-      status: planned
+      title: 은각사
       landmark: ginkakuji
-    - time: "13:00~14:15"
-      title: 철학의 길 산책
+    - period: afternoon
+      kind: place
       status: planned
-      note: 컨디션 따라 구간 단축
+      title: 철학의 길
+      note: 컨디션 따라 짧게 걸어요
       landmark: philosophers-path
-    - time: "14:15~15:00"
-      title: 청수사로 이동
+    - period: afternoon
+      kind: place
       status: planned
-      note: 택시 권장
-    - time: "15:00~16:00"
-      title: 청수사 관람
-      status: planned
-      note: 토요일 오후 혼잡 가능
+      title: 청수사
+      note: 택시로 가요. 토요일 오후라 붐벼요
       landmark: kiyomizudera
-    - time: "16:00~17:15"
-      title: 산넨자카·닌넨자카 상점가
+    - period: afternoon
+      kind: place
       status: planned
+      title: 산넨자카·닌넨자카
+      detail: 돌계단 상점가
       landmark: sannenzaka
-    - time: "17:15~18:30"
-      title: 저녁 식당으로 이동, 휴식
-      status: planned
-    - time: "18:45"
-      title: 스시도코로 스사비유 저녁 (鮨処 すさび湯)
+    - period: evening
+      kind: meal
       status: reserved
-      note: 기온이 아니라 시조 가라스마 쪽. 산넨자카에서 택시로 15~20분
+      time: "18:45"
+      title: 스시도코로 스사비유 (鮨処 すさび湯)
+      detail: 스시
+      note: 시조 가라스마 쪽이에요. 산넨자카에서 택시로 15~20분
       mapsUrl: https://www.google.com/maps/search/?api=1&query=%E9%AE%A8%E5%87%A6%20%E3%81%99%E3%81%95%E3%81%B3%E6%B9%AF%20%E4%BA%AC%E9%83%BD%E5%B8%82%E4%B8%8B%E4%BA%AC%E5%8C%BA
-    - title: 식사 후 숙소 복귀
-      status: planned
 
 - id: day4
   day: 4
   date: "2026-11-08"
-  title: 귀국
+  title: 집으로 가요
   items:
-    - time: "07:00~07:45"
-      title: 기상, 체크아웃 준비
+    - period: morning
+      kind: move
       status: planned
-    - time: "07:45~08:25"
-      title: 교토역으로 이동
-      status: planned
-    - time: "08:45"
-      title: 교토역에서 하루카 출발
-      status: planned
-      note: 실제 예약 시각 확인 필요
-    - time: "10:05"
-      title: 간사이공항 도착
-      status: planned
-    - time: "10:05~12:00"
-      title: 체크인·출국심사
-      status: planned
-    - time: "13:05"
-      title: 간사이공항 출발 (제주항공)
+      title: 체크아웃하고 교토역으로
+    - period: morning
+      kind: move
       status: fixed
+      time: "08:45"
+      title: 하루카로 간사이공항
+      note: 실제 예약 시각을 다시 확인해요
+    - period: afternoon
+      kind: move
+      status: fixed
+      time: "13:05"
+      title: 간사이공항 출발 (제주항공)

@@ -1,5 +1,5 @@
 ---
-import { getCollection, render } from 'astro:content';
+import { getCollection, getEntry, render } from 'astro:content';
 import { PHRASE_CATEGORIES } from '../../content.config';
 import Base from '../../layouts/Base.astro';
 
@@ -13,103 +13,110 @@ const renderedGuides = await Promise.all(
 
 const [hotel] = await getCollection('lodging');
 const TAXI_PHRASE = 'この住所までお願いします。';
-/** 숙소 카드는 이 가이드 바로 아래에 놓는다 */
-const HOTEL_AFTER_GUIDE = 'taxi';
-if (!guides.some((g) => g.id === HOTEL_AFTER_GUIDE)) throw new Error(`숙소 카드를 놓을 가이드 '${HOTEL_AFTER_GUIDE}'가 없어요`);
+const backdrop = (await getEntry('landmarks', 'gion'))!.data.image;
 ---
 
-<Base title="일본 기본" tab="basics">
-  <h1>일본 기본</h1>
-  <p class="lead">처음 일본에 가면 알아두면 좋은 것들이에요.</p>
+<Base title="일본 기본" tab="basics" backdrop={backdrop}>
+  <header class="page-head">
+    <h1 class="on-photo">일본 기본</h1>
+    <p class="on-photo">처음 가는 일본, 이것만 알면 돼요</p>
+  </header>
+
+  {
+    hotel && (
+      <section class="hotel" id="hotel" aria-label="우리 숙소">
+        <p class="hotel-label">우리 숙소</p>
+        <h2 class="hotel-name">{hotel.data.nameKo}</h2>
+        <p class="hotel-ja" lang="ja">
+          {hotel.data.nameJa}
+        </p>
+        <p class="hotel-addr" lang="ja">
+          {hotel.data.addressJa}
+        </p>
+        <button
+          class="btn show-btn"
+          type="button"
+          data-show-ja={`${TAXI_PHRASE}\n${hotel.data.nameJa}\n${hotel.data.addressJa}`}
+          data-show-ko="이 주소로 가 주세요."
+        >
+          택시 기사님께 보여주기
+        </button>
+        <div class="hotel-more">
+          <a class="btn" href={hotel.data.mapsUrl} target="_blank" rel="noopener">
+            구글맵
+          </a>
+          <p>
+            체크인 {hotel.data.checkIn}
+            <br />
+            체크아웃 {hotel.data.checkOut}
+          </p>
+        </div>
+        <details class="access">
+          <summary>교토역에서 가는 법</summary>
+          <ul>
+            {hotel.data.access.map((a) => (
+              <li>{a}</li>
+            ))}
+          </ul>
+        </details>
+      </section>
+    )
+  }
 
   <h2>보여주는 일본어</h2>
-  <p class="lead">누르면 일본어가 크게 나와요. 화면을 상대에게 보여주세요.</p>
+  <p class="sub muted">누르면 화면 가득 크게 나와요. 상대에게 보여주세요.</p>
   {
     categories.map((cat) => (
       <section class="phrase-group">
         <h3>{cat}</h3>
-        <div class="phrases">
-          {phrases
-            .filter((p) => p.data.category === cat)
-            .map((p) => (
-              <button class="phrase card" type="button" data-show-ja={p.data.ja} data-show-ko={p.data.ko} data-show-reading={p.data.reading}>
-                <span class="ko">{p.data.ko}</span>
-                <span class="ja muted" lang="ja">
-                  {p.data.ja}
-                </span>
-              </button>
-            ))}
-        </div>
+        {phrases
+          .filter((p) => p.data.category === cat)
+          .map((p) => (
+            <button
+              class="phrase"
+              type="button"
+              data-show-ja={p.data.ja}
+              data-show-ko={p.data.ko}
+              data-show-reading={p.data.reading}
+            >
+              <span class="ko">{p.data.ko}</span>
+              <span class="ja" lang="ja">
+                {p.data.ja}
+              </span>
+            </button>
+          ))}
       </section>
     ))
   }
 
   <h2>상황별 안내</h2>
-  {
-    renderedGuides.map(({ guide, Content }) => (
-      <>
-        <details class="guide card">
+  <p class="sub muted">첫날 밤에 필요한 것부터 순서대로예요</p>
+  <div class="guides">
+    {
+      renderedGuides.map(({ guide, Content }) => (
+        <details class="guide">
           <summary>
-            <span class="emoji" aria-hidden="true">
-              {guide.data.emoji}
-            </span>
             <strong>{guide.data.title}</strong>
-            <span class="chev" aria-hidden="true">
-              ›
-            </span>
+            <span class="pm" aria-hidden="true" />
           </summary>
           <div class="guide-body">
             <Content />
           </div>
         </details>
-        {guide.id === HOTEL_AFTER_GUIDE && hotel && (
-          <section class="hotel card" id="hotel">
-            <p class="eyebrow">우리 숙소</p>
-            <h3>{hotel.data.nameKo}</h3>
-            <p class="hotel-ja" lang="ja">
-              {hotel.data.nameJa}
-            </p>
-            <p class="address" lang="ja">
-              {hotel.data.addressJa}
-            </p>
-            <div class="hotel-actions">
-              <button
-                class="btn primary"
-                type="button"
-                data-show-ja={`${TAXI_PHRASE}\n${hotel.data.nameJa}\n${hotel.data.addressJa}`}
-                data-show-ko="이 주소로 가 주세요."
-              >
-                택시 기사에게 보여주기
-              </button>
-              <a class="btn" href={hotel.data.mapsUrl} target="_blank" rel="noopener">
-                구글맵
-              </a>
-            </div>
-            <dl>
-              <dt>체크인</dt>
-              <dd>{hotel.data.checkIn}</dd>
-              <dt>체크아웃</dt>
-              <dd>{hotel.data.checkOut}</dd>
-            </dl>
-            <p class="muted access-title">교토역에서 가는 법</p>
-            <ul class="access">
-              {hotel.data.access.map((a) => (
-                <li>{a}</li>
-              ))}
-            </ul>
-          </section>
-        )}
-      </>
-    ))
-  }
+      ))
+    }
+  </div>
 
   <dialog class="show" aria-label="일본어 보여주기">
     <div class="show-inner">
       <p class="show-ja" lang="ja" data-ja></p>
       <p class="show-reading" data-reading></p>
-      <p class="show-ko muted" data-ko></p>
+      <p class="show-ko" data-ko></p>
       <div class="show-actions">
-        <button class="btn" type="button" data-speak hidden>🔊 읽어 주기</button>
+        <button class="btn" type="button" data-speak hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"></path><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"></path></svg>
+          읽어 주기
+        </button>
         <button class="btn primary" type="button" data-close>닫기</button>
       </div>
     </div>
@@ -157,126 +164,194 @@ if (!guides.some((g) => g.id === HOTEL_AFTER_GUIDE)) throw new Error(`숙소 카
 </script>
 
 <style>
-  h3 {
-    font-size: 1rem;
-    color: var(--muted);
-    margin: 16px 0 8px;
+  .page-head {
+    padding-top: 72px;
   }
-  .phrases {
-    display: grid;
-    gap: 10px;
+  .page-head h1 {
+    margin: 0;
+  }
+  .page-head p {
+    margin: 4px 0 0;
+    font-weight: 600;
+  }
+  /* 숙소 카드: 들보색 면, 택시에서 가장 먼저 찾는 정보 */
+  .hotel {
+    margin-top: 18px;
+    padding: 18px 20px 8px;
+    background: var(--beam);
+    color: #fff;
+    scroll-margin-top: 16px;
+  }
+  .hotel p {
+    margin: 0;
+  }
+  .hotel-label {
+    font-size: var(--text-small);
+    font-weight: 700;
+    color: #f1e3d6;
+  }
+  .hotel-name {
+    margin: 2px 0 0;
+    font-size: 1.4rem;
+  }
+  .hotel-ja {
+    margin-top: 10px !important;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+  .hotel-addr {
+    font-size: 1.05rem;
+    color: #f6ece2;
+  }
+  .show-btn {
+    width: 100%;
+    min-height: 56px;
+    margin-top: 16px;
+    background: var(--wall);
+    color: var(--beam);
+    font-weight: 800;
+  }
+  .hotel-more {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 12px;
+  }
+  .hotel-more .btn {
+    background: #ffffff26;
+    color: #fff;
+  }
+  .hotel-more p {
+    font-size: var(--text-small);
+    line-height: 1.5;
+    color: #f6ece2;
+  }
+  .access {
+    margin-top: 8px;
+  }
+  .access summary {
+    display: flex;
+    align-items: center;
+    min-height: var(--tap);
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .access ul {
+    margin: 0 0 12px;
+    padding-left: 1.2em;
+    font-size: var(--text-small);
+    line-height: 1.6;
+  }
+  .access li {
+    margin-bottom: 8px;
+  }
+  h2 {
+    margin: 44px 0 0;
+  }
+  .sub {
+    margin: 4px 0 14px;
+    font-size: var(--text-small);
+  }
+  h3 {
+    margin: 22px 0 8px;
+    font-size: 1.05rem;
+    color: var(--beam);
   }
   .phrase {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 2px;
     width: 100%;
-    min-height: 64px;
+    min-height: 68px;
+    margin-bottom: 8px;
+    padding: 12px 18px;
     border: 0;
-    text-align: left;
+    background: var(--wall);
+    color: var(--ink);
     font: inherit;
-    color: inherit;
+    text-align: left;
     cursor: pointer;
+    transition: transform 0.12s ease;
+  }
+  .phrase:active {
+    transform: scale(0.98);
   }
   .phrase .ko {
     font-weight: 700;
-    font-size: 1.05rem;
+    line-height: 1.4;
   }
   .phrase .ja {
-    font-size: 0.9rem;
+    font-size: var(--text-small);
+    color: var(--ink-soft);
   }
-  .guide {
-    padding: 0;
-    margin-bottom: 10px;
+  .guides {
+    background: var(--wall);
+  }
+  .guide + .guide {
+    border-top: 3px solid var(--ground);
   }
   .guide summary {
     display: flex;
     align-items: center;
     gap: 12px;
     min-height: 64px;
-    padding: 10px 16px;
-    cursor: pointer;
+    padding: 8px 18px;
     list-style: none;
+    cursor: pointer;
   }
   .guide summary::-webkit-details-marker {
     display: none;
   }
-  .emoji {
-    font-size: 1.5rem;
-  }
   .guide summary strong {
     flex: 1;
   }
-  .chev {
-    font-size: 1.6rem;
-    color: var(--muted);
-    transition: transform 0.2s;
+  .pm {
+    position: relative;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    background: var(--stone);
   }
-  details[open] .chev {
+  .pm::before,
+  .pm::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 14px;
+    height: 3px;
+    margin: -1.5px 0 0 -7px;
+    background: var(--ink);
+    transition: transform 0.25s ease;
+  }
+  .pm::after {
     transform: rotate(90deg);
   }
+  .guide[open] .pm {
+    background: var(--maple);
+  }
+  .guide[open] .pm::before,
+  .guide[open] .pm::after {
+    background: #fff;
+  }
+  .guide[open] .pm::after {
+    transform: rotate(0deg);
+  }
+  .guide[open] summary strong {
+    color: var(--maple);
+  }
   .guide-body {
-    padding: 0 16px 12px;
-    border-top: 1px solid var(--line);
+    padding: 0 18px 14px;
   }
   .guide-body :global(ul) {
+    margin: 0;
     padding-left: 1.2em;
-    margin: 12px 0 0;
   }
   .guide-body :global(li) {
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
-  .hotel {
-    border: 2px solid var(--accent);
-    margin: 0 0 10px;
-  }
-  .hotel .eyebrow {
-    margin: 0;
-    color: var(--accent);
-    font-weight: 700;
-    font-size: 0.85rem;
-  }
-  .hotel h3 {
-    color: var(--text);
-    font-size: 1.2rem;
-    margin: 0;
-  }
-  .hotel-ja {
-    margin: 0;
-    font-size: 1.3rem;
-    font-weight: 700;
-  }
-  .address {
-    font-size: 1.1rem;
-    margin: 4px 0 12px;
-  }
-  .hotel-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .hotel dl {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 4px 16px;
-    margin: 16px 0 8px;
-  }
-  .hotel dt {
-    font-weight: 700;
-    color: var(--muted);
-  }
-  .hotel dd {
-    margin: 0;
-  }
-  .access-title {
-    margin: 8px 0 0;
-    font-weight: 700;
-  }
-  .access {
-    margin: 4px 0 0;
-    padding-left: 1.2em;
-  }
+
+  /* 일본어 크게 보여주기 */
   dialog.show {
     width: 100vw;
     height: 100dvh;
@@ -285,11 +360,11 @@ if (!guides.some((g) => g.id === HOTEL_AFTER_GUIDE)) throw new Error(`숙소 카
     margin: 0;
     padding: 0;
     border: none;
-    background: var(--surface);
-    color: var(--text);
+    background: var(--wall);
+    color: var(--ink);
   }
   dialog.show::backdrop {
-    background: rgb(0 0 0 / 0.5);
+    background: #0008;
   }
   .show-inner {
     display: flex;
@@ -297,6 +372,7 @@ if (!guides.some((g) => g.id === HOTEL_AFTER_GUIDE)) throw new Error(`숙소 카
     justify-content: center;
     min-height: 100%;
     padding: calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
+    border-top: 12px solid var(--beam);
   }
   .show-ja {
     font-size: clamp(2rem, 9vw, 3.2rem);
@@ -310,10 +386,12 @@ if (!guides.some((g) => g.id === HOTEL_AFTER_GUIDE)) throw new Error(`숙소 카
   .show-reading {
     font-size: 1.15rem;
     font-weight: 700;
-    margin: 0 0 8px;
+    color: var(--beam);
+    margin: 0 0 6px;
   }
   .show-ko {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
+    color: var(--ink-soft);
     margin: 0 0 32px;
   }
   .show-actions {
@@ -324,5 +402,14 @@ if (!guides.some((g) => g.id === HOTEL_AFTER_GUIDE)) throw new Error(`숙소 카
   .show-actions .btn {
     flex: 1;
     min-height: 56px;
+  }
+  .show-actions svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 </style>

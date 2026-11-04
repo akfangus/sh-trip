@@ -1,0 +1,134 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { PERIOD_LABEL, type Period } from '../lib/content';
+import Icon from './Icon.astro';
+
+interface Props {
+  day: CollectionEntry<'itinerary'>;
+  /** 홈처럼 짧게 보여줄 때: 설명 한 줄만 남기고 메모와 버튼은 뺀다 */
+  compact?: boolean;
+}
+
+const { day, compact = false } = Astro.props;
+const periods = (Object.keys(PERIOD_LABEL) as Period[])
+  .map((period) => ({ period, items: day.data.items.filter((i) => i.period === period) }))
+  .filter((p) => p.items.length > 0);
+---
+
+<div class:list={['plan', { compact }]}>
+  {
+    periods.map(({ period, items }) => (
+      <section class="period">
+        <h3>{PERIOD_LABEL[period]}</h3>
+        <ul class="items">
+          {items.map((item) => (
+            <li class:list={['item', item.status, item.kind]}>
+              <Icon name={item.kind} class="kind" />
+              <div class="body">
+                <p class="title">
+                  {item.time && <span class="time">{item.time}</span>}
+                  {item.title}
+                  {item.status === 'reserved' && <span class="tag">예약</span>}
+                </p>
+                {item.detail && <p class="detail">{item.detail}</p>}
+                {!compact && item.note && <p class="note">{item.note}</p>}
+                {!compact && (item.landmark || item.mapsUrl) && (
+                  <div class="actions">
+                    {item.landmark && (
+                      <a class="btn primary" href={`/landmarks/${item.landmark.id}/`}>
+                        해설 읽기
+                      </a>
+                    )}
+                    {item.mapsUrl && (
+                      <a class="btn" href={item.mapsUrl} target="_blank" rel="noopener">
+                        구글맵
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  }
+</div>
+
+<style>
+  .period {
+    display: grid;
+    grid-template-columns: 3.2em 1fr;
+    column-gap: 14px;
+    margin-top: 22px;
+  }
+  .period:first-child {
+    margin-top: 0;
+  }
+  h3 {
+    margin: 4px 0 0;
+    font-size: 1.1rem;
+    color: var(--beam);
+  }
+  /* 들보: 시간대마다 굵은 갈색 세로 막대 */
+  .items {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 14px;
+    border-left: 8px solid var(--beam);
+  }
+  .item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 10px 0;
+  }
+  .item :global(.kind) {
+    margin-top: 2px;
+    color: var(--beam);
+  }
+  .item.reserved {
+    background: var(--wall);
+    margin-left: -14px;
+    padding: 12px 14px;
+  }
+  .item.reserved :global(.kind) {
+    color: var(--maple);
+  }
+  .body {
+    flex: 1;
+    min-width: 0;
+  }
+  .title {
+    margin: 0;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+  .time {
+    font-family: var(--serif);
+    margin-right: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .reserved .time {
+    color: var(--maple);
+  }
+  .tag {
+    margin-left: 6px;
+  }
+  .detail,
+  .note {
+    margin: 2px 0 0;
+    font-size: var(--text-small);
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+  .note {
+    color: var(--ink);
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+</style>

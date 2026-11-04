@@ -18,7 +18,7 @@ interface Props {
 
 const { title, tab, back, bleed = false, backdrop } = Astro.props;
 const pageTitle = tab === 'home' ? '교토여행' : `${title} · 교토여행`;
-const backdropImage = backdrop ? await getImage({ src: backdrop, width: 900, quality: 60 }) : undefined;
+const backdropImage = backdrop ? await getImage({ src: backdrop, width: 800, quality: 60 }) : undefined;
 
 const tabs: { id: Tab; href: string; label: string; icon: string }[] = [
   {
@@ -155,20 +155,6 @@ const tabs: { id: Tab; href: string; label: string; icon: string }[] = [
     --tap: 48px;
     color-scheme: light;
 
-    /* 이전 디자인 이름 → 새 토큰 (화면별 리디자인이 끝나면 지운다) */
-    --sheet: var(--wall);
-    --sheet-2: #d9dadb;
-    --surface: var(--wall);
-    --line: var(--pebble);
-    --rule: var(--pebble);
-    --accent: var(--maple);
-    --vermilion: var(--maple);
-    --vermilion-deep: var(--maple);
-    --text: var(--ink);
-    --muted: var(--ink-soft);
-    --paper: var(--ground);
-    --indigo: var(--beam);
-    --sumi: var(--ink);
   }
 
   * {
@@ -212,13 +198,11 @@ const tabs: { id: Tab; href: string; label: string; icon: string }[] = [
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-      180deg,
-      #e6e7e600 0%,
-      #e6e7e655 30%,
-      #e6e7e6d9 72%,
-      var(--ground) 96%
-    );
+    background:
+      /* 위쪽: 사진 위 흰 제목이 밝은 하늘에서도 읽히도록 옅게 어둡힌다 */
+      linear-gradient(180deg, #1a120c80 0%, #1a120c40 22%, #1a120c00 42%),
+      /* 아래쪽: 기와 회색 바탕으로 스며든다 */
+      linear-gradient(180deg, #e6e7e600 0%, #e6e7e655 30%, #e6e7e6d9 72%, var(--ground) 96%);
   }
 
   /* 기와 막새 띠: 화면 맨 위, 탭바 위 두 곳에만 */
@@ -270,25 +254,6 @@ const tabs: { id: Tab; href: string; label: string; icon: string }[] = [
   .muted {
     color: var(--ink-soft);
   }
-  .lead {
-    color: var(--ink-soft);
-    margin: 0 0 16px;
-  }
-  .section-head {
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-    margin: 48px 0 16px;
-  }
-  .section-head h2 {
-    margin: 0;
-  }
-  .section-head .more {
-    margin-left: auto;
-    font-weight: 700;
-    font-size: var(--text-small);
-    white-space: nowrap;
-  }
 
   /* 회벽 면: 카드 대신 쓰는 정보 면 (모서리 없음, 그림자 없음) */
   .wall {
@@ -334,41 +299,13 @@ const tabs: { id: Tab; href: string; label: string; icon: string }[] = [
   }
 
   /* 예약 등 상태 표시: 단풍색 굵은 글자 */
-  .tag,
-  .badge {
+  .tag {
     font-size: var(--text-small);
     font-weight: 800;
     color: var(--maple);
     white-space: nowrap;
   }
-  .card {
-    background: var(--wall);
-    padding: 16px;
-  }
 
-  /* 날짜 도장 (일정 화면) */
-  .seal {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex: none;
-    width: 58px;
-    height: 58px;
-    background: var(--beam);
-    color: #fff;
-    font-family: var(--serif);
-    font-weight: 700;
-    line-height: 1;
-    text-align: center;
-  }
-  .seal b {
-    font-size: 1.6rem;
-  }
-  .seal small {
-    font-size: var(--text-small);
-    margin-top: 3px;
-  }
 
   .back {
     position: sticky;

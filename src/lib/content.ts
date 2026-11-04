@@ -14,15 +14,24 @@ export async function getDays() {
   return days;
 }
 
+export type Period = 'morning' | 'afternoon' | 'evening';
+export const PERIOD_LABEL: Record<Period, string> = { morning: '오전', afternoon: '오후', evening: '저녁' };
+
+export interface Visit {
+  day: number;
+  date: string;
+  period: Period;
+}
+
 /**
- * 일정에서 참조된 명소 = "가는 곳". 첫 등장 순서대로, 처음 나오는 Day와 함께 돌려준다.
+ * 일정에서 참조된 명소 = "가는 곳". 첫 등장 순서대로, 처음 가는 날과 시간대를 함께 돌려준다.
  */
 export async function getVisitedLandmarks() {
-  const visited = new Map<string, number>();
+  const visited = new Map<string, Visit>();
   for (const day of await getDays()) {
     for (const item of day.data.items) {
       if (item.landmark && !visited.has(item.landmark.id)) {
-        visited.set(item.landmark.id, day.data.day);
+        visited.set(item.landmark.id, { day: day.data.day, date: day.data.date, period: item.period });
       }
     }
   }
@@ -31,9 +40,25 @@ export async function getVisitedLandmarks() {
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
+function dateParts(isoDate: string) {
+  const [y, m, d] = isoDate.split('-').map(Number);
+  return { m, d, weekday: WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()] };
+}
+
 /** "2026-11-05" → "11월 5일 (목)" */
 export function formatDate(isoDate: string) {
-  const [y, m, d] = isoDate.split('-').map(Number);
-  const weekday = WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+  const { m, d, weekday } = dateParts(isoDate);
   return `${m}월 ${d}일 (${weekday})`;
+}
+
+/** "2026-11-05" → "11월 5일 목요일" */
+export function formatDateLong(isoDate: string) {
+  const { m, d, weekday } = dateParts(isoDate);
+  return `${m}월 ${d}일 ${weekday}요일`;
+}
+
+/** "2026-11-05" → "5일 목" */
+export function formatDayShort(isoDate: string) {
+  const { d, weekday } = dateParts(isoDate);
+  return `${d}일 ${weekday}`;
 }
