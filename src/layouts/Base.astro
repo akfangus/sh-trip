@@ -193,6 +193,12 @@ const tabs: { id: Tab; href: string; label: string; icon: string }[] = [
     font-size: 18px;
     -webkit-text-size-adjust: 100%;
   }
+  /* 폰에서 어떤 요소가 넘치더라도 화면이 옆으로 밀리지 않게 한다.
+     clip 은 스크롤 영역을 만들지 않아 sticky 요소(뒤로 버튼, 날짜 탭)에 영향이 없다. */
+  html,
+  body {
+    overflow-x: clip;
+  }
   body {
     position: relative;
     margin: 0;
