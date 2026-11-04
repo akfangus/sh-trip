@@ -16,7 +16,7 @@ const { Content } = await render(landmark);
 const visit = (await getVisitedLandmarks()).get(landmark.id);
 ---
 
-<Base title={nameKo} tab="landmarks" back={{ href: '/landmarks/', label: '교토 명소' }} bleed backdrop={image}>
+<Base title={nameKo} tab="landmarks" back={{ fallback: '/landmarks/' }} bleed backdrop={image}>
   <header class="page-head">
     <p class="ja" lang="ja">{nameJa}</p>
     <h1>{nameKo}</h1>

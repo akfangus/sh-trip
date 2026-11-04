@@ -8,8 +8,8 @@ export type Tab = 'home' | 'itinerary' | 'landmarks' | 'basics';
 interface Props {
   title: string;
   tab: Tab;
-  /** 상세 화면이면 상단에 돌아가기 링크를 둔다 */
-  back?: { href: string; label: string };
+  /** 상세 화면이면 상단에 "뒤로" 버튼을 둔다. 앱 안에서 왔으면 왔던 화면으로, 아니면 이 주소로 간다 */
+  back?: { fallback: string };
   /** 첫 요소가 화면 끝까지 닿는 사진일 때 본문 위쪽 여백을 없앤다 */
   bleed?: boolean;
   /** 화면 위쪽에 깔리고 아래로 바탕색에 스며드는 배경 사진 */
@@ -81,11 +81,11 @@ const tabs: { id: Tab; href: string; label: string; icon: string }[] = [
     {
       back && (
         <nav class="back" class:list={{ floating: bleed }}>
-          <a href={back.href} aria-label={`${back.label}(으)로 돌아가기`}>
+          <a href={back.fallback} data-back aria-label="뒤로 가기">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M15 5l-7 7 7 7" />
             </svg>
-            <span>{back.label}</span>
+            <span>뒤로</span>
           </a>
         </nav>
       )
@@ -127,6 +127,16 @@ const tabs: { id: Tab; href: string; label: string; icon: string }[] = [
     <script>
       import { registerSW } from 'virtual:pwa-register';
       registerSW({ immediate: true });
+
+      // "뒤로": 앱 안의 다른 화면에서 왔으면 그 화면으로 돌아간다 (스크롤 위치도 그대로).
+      // 링크로 바로 열었거나 처음 연 화면이면 기본 주소(교토 명소 목록)로 간다.
+      document.querySelector<HTMLAnchorElement>('[data-back]')?.addEventListener('click', (e) => {
+        const cameFromApp = document.referrer && new URL(document.referrer).origin === location.origin;
+        if (cameFromApp && history.length > 1) {
+          e.preventDefault();
+          history.back();
+        }
+      });
     </script>
   </body>
 </html>
