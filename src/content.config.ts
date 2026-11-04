@@ -34,7 +34,7 @@ const itemStatus = z.enum([
   'fixed',
   /** 예정·예상: "약 ○○시" */
   'planned',
-  /** 선택 */
+  /** 선택: "선택" 배지 + "약 ○○시" */
   'optional',
 ]);
 
@@ -58,6 +58,9 @@ const itinerary = defineCollection({
   }),
 });
 
+/** 보여주는 일본어 카드 분류. 화면에도 이 순서로 나온다. */
+export const PHRASE_CATEGORIES = ['기본', '식당', '교통', '쇼핑', '도움'] as const;
+
 /** 보여주는 일본어 카드 */
 const phrases = defineCollection({
   loader: file('./src/content/phrases.yaml'),
@@ -66,7 +69,7 @@ const phrases = defineCollection({
     ko: z.string(),
     /** 한글 발음 */
     reading: z.string().optional(),
-    category: z.string(),
+    category: z.enum(PHRASE_CATEGORIES),
   }),
 });
 

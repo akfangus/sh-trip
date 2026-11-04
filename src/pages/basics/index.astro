@@ -1,11 +1,10 @@
 ---
 import { getCollection, render } from 'astro:content';
+import { PHRASE_CATEGORIES } from '../../content.config';
 import Base from '../../layouts/Base.astro';
 
 const phrases = await getCollection('phrases');
-const CATEGORY_ORDER = ['기본', '식당', '교통', '쇼핑', '도움'];
-const rank = (c: string) => (CATEGORY_ORDER.includes(c) ? CATEGORY_ORDER.indexOf(c) : CATEGORY_ORDER.length);
-const categories = [...new Set(phrases.map((p) => p.data.category))].sort((a, b) => rank(a) - rank(b));
+const categories = PHRASE_CATEGORIES.filter((c) => phrases.some((p) => p.data.category === c));
 
 const guides = (await getCollection('guides')).sort((a, b) => a.data.order - b.data.order);
 const renderedGuides = await Promise.all(
@@ -14,6 +13,9 @@ const renderedGuides = await Promise.all(
 
 const [hotel] = await getCollection('lodging');
 const TAXI_PHRASE = 'この住所までお願いします。';
+/** 숙소 카드는 이 가이드 바로 아래에 놓는다 */
+const HOTEL_AFTER_GUIDE = 'taxi';
+if (!guides.some((g) => g.id === HOTEL_AFTER_GUIDE)) throw new Error(`숙소 카드를 놓을 가이드 '${HOTEL_AFTER_GUIDE}'가 없어요`);
 ---
 
 <Base title="일본 기본" tab="basics">
@@ -30,7 +32,7 @@ const TAXI_PHRASE = 'この住所までお願いします。';
           {phrases
             .filter((p) => p.data.category === cat)
             .map((p) => (
-              <button class="phrase card" type="button" data-show-ja={p.data.ja} data-show-ko={p.data.ko}>
+              <button class="phrase card" type="button" data-show-ja={p.data.ja} data-show-ko={p.data.ko} data-show-reading={p.data.reading}>
                 <span class="ko">{p.data.ko}</span>
                 <span class="ja muted" lang="ja">
                   {p.data.ja}
@@ -60,7 +62,7 @@ const TAXI_PHRASE = 'この住所までお願いします。';
             <Content />
           </div>
         </details>
-        {guide.id === 'taxi' && hotel && (
+        {guide.id === HOTEL_AFTER_GUIDE && hotel && (
           <section class="hotel card" id="hotel">
             <p class="eyebrow">우리 숙소</p>
             <h3>{hotel.data.nameKo}</h3>
@@ -104,6 +106,7 @@ const TAXI_PHRASE = 'この住所までお願いします。';
   <dialog class="show" aria-label="일본어 보여주기">
     <div class="show-inner">
       <p class="show-ja" lang="ja" data-ja></p>
+      <p class="show-reading" data-reading></p>
       <p class="show-ko muted" data-ko></p>
       <div class="show-actions">
         <button class="btn" type="button" data-speak hidden>🔊 읽어 주기</button>
@@ -117,12 +120,15 @@ const TAXI_PHRASE = 'この住所までお願いします。';
   const dialog = document.querySelector<HTMLDialogElement>('dialog.show')!;
   const jaEl = dialog.querySelector<HTMLElement>('[data-ja]')!;
   const koEl = dialog.querySelector<HTMLElement>('[data-ko]')!;
+  const readingEl = dialog.querySelector<HTMLElement>('[data-reading]')!;
   const speakBtn = dialog.querySelector<HTMLButtonElement>('[data-speak]')!;
 
   document.querySelectorAll<HTMLElement>('[data-show-ja]').forEach((el) => {
     el.addEventListener('click', () => {
       jaEl.textContent = el.dataset.showJa ?? '';
       koEl.textContent = el.dataset.showKo ?? '';
+      readingEl.textContent = el.dataset.showReading ? `읽는 법: ${el.dataset.showReading}` : '';
+      readingEl.hidden = !el.dataset.showReading;
       dialog.showModal();
     });
   });
@@ -299,6 +305,11 @@ const TAXI_PHRASE = 'この住所までお願いします。';
     white-space: pre-line;
     word-break: normal;
     line-break: strict;
+  }
+  .show-reading {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0 0 8px;
   }
   .show-ko {
     font-size: 1.1rem;

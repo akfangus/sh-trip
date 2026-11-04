@@ -1,28 +1,26 @@
 ---
-import { getEntry } from 'astro:content';
+import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import { formatDate, getDays } from '../lib/content';
 
 const days = await getDays();
+const tripRange = `${formatDate(days[0].data.date)} ~ ${formatDate(days[days.length - 1].data.date)}`;
 
-const STATUS_LABEL = { reserved: '예약 확정', fixed: '', planned: '', optional: '선택' } as const;
+/** 일정 상태별 표시 방법: 배지 문구와, 시간 앞에 "약"을 붙일지 */
+const STATUS_VIEW = {
+  reserved: { badge: '예약 확정', approx: false },
+  fixed: { badge: '', approx: false },
+  planned: { badge: '', approx: true },
+  optional: { badge: '선택', approx: true },
+} as const;
 
-// 일정 항목에서 참조한 명소 이름을 미리 모아 둔다.
-const landmarkNames = new Map<string, string>();
-for (const day of days) {
-  for (const item of day.data.items) {
-    if (item.landmark && !landmarkNames.has(item.landmark.id)) {
-      const entry = await getEntry(item.landmark);
-      if (entry) landmarkNames.set(entry.id, entry.data.nameKo);
-    }
-  }
-}
+const landmarkNames = new Map((await getCollection('landmarks')).map((l) => [l.id, l.data.nameKo]));
 ---
 
 <Base title="교토여행" tab="itinerary">
   <header class="hero">
     <p class="eyebrow">우리 가족 교토 여행</p>
-    <h1>11월 5일 (목) ~ 8일 (일)</h1>
+    <h1>{tripRange}</h1>
     <p class="today muted" data-today hidden></p>
   </header>
 
@@ -43,12 +41,12 @@ for (const day of days) {
           {day.data.items.map((item) => (
             <li class:list={['item', item.status]}>
               <div class="time">
-                {item.time && (item.status === 'planned' || item.status === 'optional' ? `약 ${item.time}` : item.time)}
+                {item.time && (STATUS_VIEW[item.status].approx ? `약 ${item.time}` : item.time)}
               </div>
               <div class="body">
                 <div class="title">
                   {item.title}
-                  {STATUS_LABEL[item.status] && <span class="badge">{STATUS_LABEL[item.status]}</span>}
+                  {STATUS_VIEW[item.status].badge && <span class="badge">{STATUS_VIEW[item.status].badge}</span>}
                 </div>
                 {item.note && <div class="note muted">{item.note}</div>}
                 {(item.landmark || item.mapsUrl) && (
@@ -60,7 +58,7 @@ for (const day of days) {
                     )}
                     {item.mapsUrl && (
                       <a class="btn" href={item.mapsUrl} target="_blank" rel="noopener">
-                        지도
+                        구글맵
                       </a>
                     )}
                   </div>
@@ -86,10 +84,10 @@ for (const day of days) {
   if (label) {
     label.textContent =
       today.kind === 'day'
-        ? `오늘은 Day ${today.day} 입니다`
+        ? `오늘은 Day ${today.day}예요`
         : today.kind === 'before'
           ? '출발 전이에요. 첫날 일정을 미리 확인해 보세요.'
-          : '여행이 끝났어요. 수고하셨습니다!';
+          : '여행이 끝났어요. 다들 수고 많으셨어요!';
     label.hidden = false;
   }
   if (today.kind === 'day') {
@@ -208,7 +206,7 @@ for (const day of days) {
     margin-top: 10px;
   }
   .actions .btn {
-    min-height: 44px;
+    min-height: 48px;
     font-size: 0.95rem;
   }
 </style>

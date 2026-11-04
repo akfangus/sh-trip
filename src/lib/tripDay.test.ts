@@ -27,4 +27,8 @@ describe('tripDayOf', () => {
   it('마지막 날 밤 늦게까지 Day 4', () => {
     expect(tripDayOf(new Date('2026-11-08T23:59:00+09:00'))).toEqual({ kind: 'day', day: 4 });
   });
+
+  it('출발일 0시(일본 시간)부터 Day 1', () => {
+    expect(tripDayOf(new Date('2026-11-05T00:00:00+09:00'))).toEqual({ kind: 'day', day: 1 });
+  });
 });
