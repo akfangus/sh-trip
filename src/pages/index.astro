@@ -19,11 +19,10 @@ const first = days[0];
 const last = days[days.length - 1];
 const tripRange = `${formatDateLong(first.data.date)}부터 ${formatDateLong(last.data.date).replace(/^\d+월 /, '')}까지`;
 
-/** 화면에서 "다음 일정", "오늘 가는 곳"을 계산할 때 쓰는 일정 요약 (브라우저에서 오늘 날짜로 고른다) */
+/** 화면에서 "다음 일정"을 계산할 때 쓰는 일정 요약 (브라우저에서 오늘 날짜로 고른다) */
 const plan = days.map((d) => ({
   day: d.data.day,
   timed: d.data.items.filter((i) => i.time).map((i) => ({ time: i.time!, title: i.title.replace(/ \(.*\)$/, '') })),
-  places: new Set(d.data.items.flatMap((i) => (i.landmark ? [i.landmark.id] : []))).size,
 }));
 const firstTimed = plan[0].timed[0];
 
@@ -32,32 +31,10 @@ const firstTimed = plan[0].timed[0];
 <Base title="홈" tab="home" backdrop={backdrop}>
   <div class="home">
     <header class="page-head span-12">
-      <h1>우리 가족 교토여행</h1>
+      <h1>교토여행</h1>
       <p class="fact" data-fact>{tripRange}, 3박 4일이에요. 첫 일정은 {firstTimed.time} {firstTimed.title}이에요.</p>
     </header>
 
-    <dl class="counts span-12" aria-label="한눈에 보기">
-      <div class="count">
-        <dt>여행</dt>
-        <dd class="value" data-count-trip>D-1</dd>
-        <dd class="caption">11월 5일부터 4일</dd>
-      </div>
-      <div class="count">
-        <dt>다음 일정</dt>
-        <dd class="value" data-count-next-time>{firstTimed.time}</dd>
-        <dd class="caption" data-count-next-title>{firstTimed.title}</dd>
-      </div>
-      <div class="count">
-        <dt>오늘 가는 곳</dt>
-        <dd class="value"><span data-count-places>{plan[0].places}</span><span class="unit">곳</span></dd>
-        <dd class="caption" data-count-places-caption>도착하는 날은 쉬어요</dd>
-      </div>
-      <div class="count">
-        <dt>숙소 체크인</dt>
-        <dd class="value">{hotel.data.checkIn.replace('부터', '')}</dd>
-        <dd class="caption">{hotel.data.nameKo.replace('교토 ', '')}</dd>
-      </div>
-    </dl>
 
     <section class="panel today span-9" aria-labelledby="today-title">
       <header class="panel-head">
@@ -150,7 +127,7 @@ const firstTimed = plan[0].timed[0];
   import { periodOf, tripDayOf } from '../lib/tripDay';
   import { currentTime } from '../lib/now';
 
-  type DayPlanData = { day: number; timed: { time: string; title: string }[]; places: number };
+  type DayPlanData = { day: number; timed: { time: string; title: string }[] };
   const plan: DayPlanData[] = JSON.parse(document.getElementById('plan-data')!.textContent!);
   const COUNT = ['', '하루', '이틀', '사흘', '나흘', '닷새', '엿새', '이레'];
 
@@ -171,26 +148,15 @@ const firstTimed = plan[0].timed[0];
   if (today.kind === 'before') {
     $('[data-fact]').textContent =
       `${COUNT[today.daysLeft] ?? today.daysLeft + '일'} 뒤 출발해요. 첫 일정은 ${todays.timed[0].time} ${todays.timed[0].title}이에요.`;
-    $('[data-count-trip]').textContent = `D-${today.daysLeft}`;
   } else if (today.kind === 'day') {
     const period = { morning: '오전', afternoon: '오후', evening: '저녁' }[periodOf(now)];
     $('[data-fact]').textContent = next
       ? `오늘은 ${today.day}일째 ${period}예요. 다음은 ${next.time} ${next.title}이에요.`
       : `오늘은 ${today.day}일째 ${period}예요. 남은 예약 없이 쉬는 시간이에요.`;
-    $('[data-count-trip]').textContent = `${today.day}일째`;
   } else {
     $('[data-fact]').textContent = '여행을 마쳤어요. 다들 수고 많으셨어요.';
-    $('[data-count-trip]').textContent = '끝';
   }
 
-  // 숫자 칸
-  if (next) {
-    $('[data-count-next-time]').textContent = next.time;
-    $('[data-count-next-title]').textContent = next.title;
-  }
-  $('[data-count-places]').textContent = String(todays.places);
-  $('[data-count-places-caption]').textContent =
-    todays.places === 0 ? '도착하는 날은 쉬어요' : `${showDay}일째에 가는 명소`;
 
   // 오늘 일정 칸
   document.querySelectorAll<HTMLElement>('[data-today-day]').forEach((el) => {
@@ -238,48 +204,6 @@ const firstTimed = plan[0].timed[0];
     max-width: 38em;
   }
 
-  /* 숫자 칸: 폰 2×2, 데스크톱 4칸. 숫자는 보통 굵기 */
-  .counts {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin: 8px 0 0;
-  }
-  @media (min-width: 1024px) {
-    .counts {
-      grid-template-columns: repeat(4, 1fr);
-    }
-  }
-  .count {
-    background: var(--wall);
-    padding: 14px 16px 16px;
-    min-height: 120px;
-  }
-  .count dt {
-    font-size: var(--text-small);
-    font-weight: 700;
-    color: var(--ink-soft);
-  }
-  .count dd {
-    margin: 0;
-  }
-  .value {
-    font-size: 1.75rem;
-    line-height: 1.25;
-    font-weight: 400;
-    font-variant-numeric: tabular-nums;
-    margin-top: 2px !important;
-  }
-  .unit {
-    font-size: var(--text-small);
-    color: var(--ink-soft);
-    margin-left: 2px;
-  }
-  .caption {
-    font-size: var(--text-small);
-    line-height: 1.4;
-    color: var(--ink-soft);
-  }
 
   /* 패널: 회벽 면 하나에 제목과 내용을 바로 담는다 */
   .panel {
