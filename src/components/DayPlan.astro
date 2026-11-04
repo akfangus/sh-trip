@@ -7,9 +7,11 @@ interface Props {
   day: CollectionEntry<'itinerary'>;
   /** 홈처럼 짧게 보여줄 때: 설명 한 줄만 남기고 메모와 버튼은 뺀다 */
   compact?: boolean;
+  /** 명소 줄 전체를 눌러 "지금 구경하는 곳"으로 고를 수 있게 한다 (홈) */
+  pickable?: boolean;
 }
 
-const { day, compact = false } = Astro.props;
+const { day, compact = false, pickable = false } = Astro.props;
 const periods = (Object.keys(PERIOD_LABEL) as Period[])
   .map((period) => ({ period, items: day.data.items.filter((i) => i.period === period) }))
   .filter((p) => p.items.length > 0);
@@ -27,13 +29,23 @@ const periods = (Object.keys(PERIOD_LABEL) as Period[])
         </h3>
         <ul class="items">
           {items.map((item) => (
-            <li class:list={['item', item.status, item.kind]}>
+            <li class:list={['item', item.status, item.kind, { pick: pickable && item.landmark }]}>
+              {pickable && item.landmark && (
+                <button
+                  class="pick-btn"
+                  type="button"
+                  data-pick={item.landmark.id}
+                  aria-pressed="false"
+                  aria-label={`${item.title}, 지금 구경하는 곳으로 고르기`}
+                />
+              )}
               <Icon name={item.kind} class="kind" />
               <div class="body">
                 <p class="title">
                   {item.time && <span class="time">{item.time}</span>}
                   {item.title}
                   {item.status === 'reserved' && <span class="tag">예약</span>}
+                  {pickable && item.landmark && <span class="here-tag">지금 여기</span>}
                 </p>
                 {item.detail && <p class="detail">{item.detail}</p>}
                 {!compact && item.note && <p class="note">{item.note}</p>}
@@ -126,6 +138,48 @@ const periods = (Object.keys(PERIOD_LABEL) as Period[])
   .item :global(.kind) {
     margin-top: 2px;
     color: var(--beam);
+  }
+  /* 고를 수 있는 명소 줄: 줄 전체가 버튼 (투명 버튼을 줄 위에 깐다) */
+  .item.pick {
+    position: relative;
+    margin-left: -14px;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid #e2e2e0;
+    border-left: 0;
+  }
+  .item.pick + .item.pick {
+    margin-top: 6px;
+  }
+  .pick-btn {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+  .pick-btn:focus-visible {
+    outline-offset: -3px;
+  }
+  .here-tag {
+    display: none;
+    margin-left: 6px;
+    font-size: var(--text-small);
+    font-weight: 800;
+    color: var(--maple);
+  }
+  .item.pick:has(.pick-btn[aria-pressed='true']) {
+    background: var(--wall);
+    border-left: 4px solid var(--maple);
+    padding-left: 10px;
+  }
+  .item.pick:has(.pick-btn[aria-pressed='true']) .here-tag {
+    display: inline;
+  }
+  .item.pick:has(.pick-btn[aria-pressed='true']) :global(.kind) {
+    color: var(--maple);
   }
   .item.reserved {
     background: var(--wall);

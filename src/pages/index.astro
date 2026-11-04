@@ -3,7 +3,7 @@ import { Image } from 'astro:assets';
 import { getCollection, getEntry } from 'astro:content';
 import DayPlan from '../components/DayPlan.astro';
 import Base from '../layouts/Base.astro';
-import { formatDateLong, getDays, getVisitedLandmarks, PERIOD_LABEL } from '../lib/content';
+import { getDays, getVisitedLandmarks, PERIOD_LABEL } from '../lib/content';
 
 const days = await getDays();
 const visited = await getVisitedLandmarks();
@@ -14,16 +14,6 @@ const backdrop = (await getEntry('landmarks', 'kiyomizudera'))!.data.image;
 const LIST_LIMIT = 5;
 const guides = (await getCollection('guides')).sort((a, b) => a.data.order - b.data.order).slice(0, LIST_LIMIT - 1);
 
-const first = days[0];
-const last = days[days.length - 1];
-const tripRange = `${formatDateLong(first.data.date)}부터 ${formatDateLong(last.data.date).replace(/^\d+월 /, '')}까지`;
-
-/** 화면에서 "다음 일정"을 계산할 때 쓰는 일정 요약 (브라우저에서 오늘 날짜로 고른다) */
-const plan = days.map((d) => ({
-  day: d.data.day,
-  timed: d.data.items.filter((i) => i.time).map((i) => ({ time: i.time!, title: i.title.replace(/ \(.*\)$/, '') })),
-}));
-const firstTimed = plan[0].timed[0];
 
 ---
 
@@ -31,8 +21,29 @@ const firstTimed = plan[0].timed[0];
   <div class="home">
     <header class="page-head span-12">
       <h1>교토여행</h1>
-      <p class="fact" data-fact>{tripRange}, 3박 4일이에요. 첫 일정은 {firstTimed.time} {firstTimed.title}이에요.</p>
     </header>
+
+    <section class="panel here span-12" aria-labelledby="here-title">
+      <h2 id="here-title">지금 구경하는 곳</h2>
+      <p class="here-empty" data-here-empty>아래 일정에서 명소를 누르면 여기에 띄워 둘게요.</p>
+      {
+        going.map((l) => (
+          <div class="here-card" data-here={l.id} hidden>
+            <a class="here-link" href={`/landmarks/${l.id}/`}>
+              <Image src={l.data.image} alt="" width={240} quality={60} />
+              <span class="here-text">
+                <strong class="serif">{l.data.nameKo}</strong>
+                <span>{l.data.summary}</span>
+                <span class="here-go">해설 보기</span>
+              </span>
+            </a>
+            <button class="btn here-clear" type="button" data-here-clear>
+              다 봤어요
+            </button>
+          </div>
+        ))
+      }
+    </section>
 
 
     <section class="panel today span-12" aria-labelledby="today-title">
@@ -43,7 +54,7 @@ const firstTimed = plan[0].timed[0];
       {
         days.map((day) => (
           <div data-today-day={day.data.day} hidden={day.data.day !== 1}>
-            <DayPlan day={day} compact />
+            <DayPlan day={day} compact pickable />
           </div>
         ))
       }
@@ -105,49 +116,68 @@ const firstTimed = plan[0].timed[0];
   </div>
 </Base>
 
-<script is:inline type="application/json" id="plan-data" set:html={JSON.stringify(plan)} />
-
 <script>
-  import { periodOf, tripDayOf } from '../lib/tripDay';
+  import { tripDayOf } from '../lib/tripDay';
   import { currentTime } from '../lib/now';
 
-  type DayPlanData = { day: number; timed: { time: string; title: string }[] };
-  const plan: DayPlanData[] = JSON.parse(document.getElementById('plan-data')!.textContent!);
-  const COUNT = ['', '하루', '이틀', '사흘', '나흘', '닷새', '엿새', '이레'];
-
-  const now = currentTime();
-  const today = tripDayOf(now);
-  const jstHHMM = new Date(now.getTime() + 9 * 3600e3).toISOString().slice(11, 16);
+  const today = tripDayOf(currentTime());
   const $ = (sel: string) => document.querySelector<HTMLElement>(sel)!;
 
-  // 오늘(여행 전이면 첫날)의 다음 시각 일정. 오늘 남은 게 없으면 다음 날 첫 일정.
+  // 오늘 일정 칸: 여행 중이면 오늘, 여행 전이면 첫날
   const showDay = today.kind === 'day' ? today.day : 1;
-  const todays = plan[showDay - 1];
-  const next =
-    today.kind === 'day'
-      ? (todays.timed.find((t) => t.time > jstHHMM) ?? plan.slice(showDay).flatMap((d) => d.timed)[0])
-      : todays.timed[0];
-
-  // 제목 아래 한 줄: 오늘의 사실 한 가지
-  if (today.kind === 'before') {
-    $('[data-fact]').textContent =
-      `${COUNT[today.daysLeft] ?? today.daysLeft + '일'} 뒤 출발해요. 첫 일정은 ${todays.timed[0].time} ${todays.timed[0].title}이에요.`;
-  } else if (today.kind === 'day') {
-    const period = { morning: '오전', afternoon: '오후', evening: '저녁' }[periodOf(now)];
-    $('[data-fact]').textContent = next
-      ? `오늘은 ${today.day}일째 ${period}예요. 다음은 ${next.time} ${next.title}이에요.`
-      : `오늘은 ${today.day}일째 ${period}예요. 남은 예약 없이 쉬는 시간이에요.`;
-  } else {
-    $('[data-fact]').textContent = '여행을 마쳤어요. 다들 수고 많으셨어요.';
-  }
-
-
-  // 오늘 일정 칸
   document.querySelectorAll<HTMLElement>('[data-today-day]').forEach((el) => {
     el.hidden = Number(el.dataset.todayDay) !== showDay;
   });
   $('[data-today-title]').textContent = today.kind === 'day' ? `오늘 일정, ${showDay}일째` : `${showDay}일째 일정`;
   $('[data-today-link]').setAttribute('href', `/itinerary/#day${showDay}`);
+
+  // 지금 구경하는 곳: 일정의 명소 줄을 누르면 이 폰에 저장하고 위 칸에 띄운다
+  const KEY = 'kyoto-trip.current-place';
+  const load = () => {
+    try {
+      return localStorage.getItem(KEY);
+    } catch {
+      return null;
+    }
+  };
+  const save = (id: string | null) => {
+    try {
+      if (id) localStorage.setItem(KEY, id);
+      else localStorage.removeItem(KEY);
+    } catch {
+      /* 저장할 수 없는 환경이면 이번 화면에서만 보여준다 */
+    }
+  };
+  let current = load();
+
+  function render() {
+    let shown = false;
+    document.querySelectorAll<HTMLElement>('[data-here]').forEach((card) => {
+      card.hidden = card.dataset.here !== current;
+      shown ||= !card.hidden;
+    });
+    $('[data-here-empty]').hidden = shown;
+    document.querySelectorAll<HTMLButtonElement>('[data-pick]').forEach((b) => {
+      b.setAttribute('aria-pressed', String(b.dataset.pick === current));
+    });
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('[data-pick]').forEach((b) =>
+    b.addEventListener('click', () => {
+      current = current === b.dataset.pick ? null : (b.dataset.pick ?? null);
+      save(current);
+      render();
+      if (current) $('#here-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }),
+  );
+  document.querySelectorAll<HTMLButtonElement>('[data-here-clear]').forEach((b) =>
+    b.addEventListener('click', () => {
+      current = null;
+      save(null);
+      render();
+    }),
+  );
+  render();
 </script>
 
 <style>
@@ -177,11 +207,53 @@ const firstTimed = plan[0].timed[0];
     max-width: none;
   }
 
-  .fact {
-    font-size: 1.1rem;
-    max-width: 38em;
-  }
 
+
+  /* 지금 구경하는 곳 */
+  .here h2 {
+    margin: 0 0 12px;
+    font-size: 1.25rem;
+    scroll-margin-top: 16px;
+  }
+  .here-empty {
+    margin: 0;
+    color: var(--ink-soft);
+  }
+  .here-link {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 14px;
+    align-items: center;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .here-link :global(img) {
+    width: 96px;
+    height: 96px;
+    object-fit: cover;
+  }
+  .here-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.4;
+  }
+  .here-text strong {
+    font-size: 1.45rem;
+    line-height: 1.25;
+  }
+  .here-text span {
+    font-size: var(--text-small);
+    color: var(--ink-soft);
+  }
+  .here-text .here-go {
+    margin-top: 4px;
+    font-weight: 800;
+    color: var(--maple);
+  }
+  .here-clear {
+    width: 100%;
+    margin-top: 14px;
+  }
 
   /* 패널: 회벽 면 하나에 제목과 내용을 바로 담는다 */
   .panel {
