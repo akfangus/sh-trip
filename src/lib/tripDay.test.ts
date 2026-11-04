@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { tripDayOf } from './tripDay';
+import { periodOf, tripDayOf } from './tripDay';
 
 describe('tripDayOf', () => {
   it('11/5 낮(일본 시간)은 Day 1', () => {
@@ -35,5 +35,19 @@ describe('tripDayOf', () => {
   it('여행 전에는 출발까지 남은 날 수(D-day)를 알려준다', () => {
     expect(tripDayOf(new Date('2026-11-04T08:00:00+09:00'))).toEqual({ kind: 'before', daysLeft: 1 });
     expect(tripDayOf(new Date('2026-11-01T23:59:00+09:00'))).toEqual({ kind: 'before', daysLeft: 4 });
+  });
+});
+
+describe('periodOf', () => {
+  it('일본 시간 낮 12시 전은 오전, 12시부터 오후, 17시부터 저녁', () => {
+    expect(periodOf(new Date('2026-11-06T11:59:00+09:00'))).toBe('morning');
+    expect(periodOf(new Date('2026-11-06T12:00:00+09:00'))).toBe('afternoon');
+    expect(periodOf(new Date('2026-11-06T16:59:00+09:00'))).toBe('afternoon');
+    expect(periodOf(new Date('2026-11-06T17:00:00+09:00'))).toBe('evening');
+  });
+
+  it('한국 시간 설정과 무관하게 일본 시각으로 판단한다 (UTC로 표현된 시각)', () => {
+    // 2026-11-06 03:30 UTC = 12:30 JST
+    expect(periodOf(new Date('2026-11-06T03:30:00Z'))).toBe('afternoon');
   });
 });

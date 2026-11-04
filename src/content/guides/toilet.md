@@ -1,4 +1,5 @@
 ---
+summary: 비데 버튼에 적힌 글자 읽는 법
 title: 화장실 버튼 읽기
 emoji: "🚻"
 order: 9

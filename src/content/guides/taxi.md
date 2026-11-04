@@ -1,4 +1,5 @@
 ---
+summary: 문은 저절로 열려요. 숙소 주소를 보여주면 돼요
 title: 택시 타기
 emoji: "🚕"
 order: 5

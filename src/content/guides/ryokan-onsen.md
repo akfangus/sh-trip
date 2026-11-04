@@ -1,4 +1,5 @@
 ---
+summary: 유카타 입는 법과 온천 들어가기 전에 할 일
 title: 료칸·온천 매너
 emoji: "♨️"
 order: 1

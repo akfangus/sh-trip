@@ -1,4 +1,5 @@
 ---
+summary: 현금을 쓰는 곳이 많아요. 동전 종류와 환율
 title: 돈과 결제
 emoji: "💴"
 order: 10

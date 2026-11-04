@@ -15,11 +15,16 @@ const periods = (Object.keys(PERIOD_LABEL) as Period[])
   .filter((p) => p.items.length > 0);
 ---
 
-<div class:list={['plan', { compact }]}>
+<div class:list={['plan', { compact }]} data-plan-day={day.data.day}>
   {
     periods.map(({ period, items }) => (
-      <section class="period">
-        <h3>{PERIOD_LABEL[period]}</h3>
+      <section class="period" data-period={period}>
+        <h3>
+          {PERIOD_LABEL[period]}
+          <span class="now-label" hidden>
+            지금
+          </span>
+        </h3>
         <ul class="items">
           {items.map((item) => (
             <li class:list={['item', item.status, item.kind]}>
@@ -55,6 +60,23 @@ const periods = (Object.keys(PERIOD_LABEL) as Period[])
   }
 </div>
 
+<script>
+  import { periodOf, tripDayOf } from '../lib/tripDay';
+  import { currentTime } from '../lib/now';
+
+  // 여행 중이면 오늘의 "지금" 시간대 들보를 단풍색으로 칠한다 (일본 시간 기준).
+  const today = tripDayOf(currentTime());
+  if (today.kind === 'day') {
+    const now = periodOf(currentTime());
+    document
+      .querySelectorAll<HTMLElement>(`[data-plan-day="${today.day}"] [data-period="${now}"]`)
+      .forEach((section) => {
+        section.classList.add('is-now');
+        section.querySelector<HTMLElement>('.now-label')?.removeAttribute('hidden');
+      });
+  }
+</script>
+
 <style>
   .period {
     display: grid;
@@ -69,6 +91,24 @@ const periods = (Object.keys(PERIOD_LABEL) as Period[])
     margin: 4px 0 0;
     font-size: 1.1rem;
     color: var(--beam);
+  }
+  .now-label[hidden] {
+    display: none;
+  }
+  .now-label {
+    display: block;
+    margin-top: 2px;
+    font-family: var(--sans);
+    font-size: var(--text-small);
+    font-weight: 800;
+    color: var(--maple);
+  }
+  /* 지금 시간대: 들보가 단풍색이 된다. 화면에서 강조색이 데이터에 쓰이는 유일한 자리 */
+  .period.is-now h3 {
+    color: var(--maple);
+  }
+  .period.is-now .items {
+    border-left-color: var(--maple);
   }
   /* 들보: 시간대마다 굵은 갈색 세로 막대 */
   .items {

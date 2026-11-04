@@ -108,6 +108,8 @@ const guides = defineCollection({
   loader: glob({ base: './src/content/guides', pattern: '*.md' }),
   schema: z.object({
     title: z.string(),
+    /** 홈 등 목록에 쓰는 한 줄 요약 */
+    summary: z.string(),
     emoji: z.string(),
     order: z.number(),
   }),

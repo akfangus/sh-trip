@@ -24,3 +24,13 @@ export function tripDayOf(instant: Date): TripDay {
   if (day > TRIP_DAYS) return { kind: 'after' };
   return { kind: 'day', day };
 }
+
+export type DayPeriod = 'morning' | 'afternoon' | 'evening';
+
+/** 어떤 시각이 일본 시간으로 오전(~12시) / 오후(12~17시) / 저녁(17시~)인지 돌려준다. */
+export function periodOf(instant: Date): DayPeriod {
+  const jstHour = new Date(instant.getTime() + JST_OFFSET_MS).getUTCHours();
+  if (jstHour < 12) return 'morning';
+  if (jstHour < 17) return 'afternoon';
+  return 'evening';
+}

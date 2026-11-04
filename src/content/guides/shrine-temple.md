@@ -1,4 +1,5 @@
 ---
+summary: 손 씻는 순서, 신사와 절의 인사법 차이
 title: 신사·절 참배법
 emoji: "⛩️"
 order: 6

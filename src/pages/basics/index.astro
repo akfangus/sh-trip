@@ -18,8 +18,8 @@ const backdrop = (await getEntry('landmarks', 'arashiyama'))!.data.image;
 
 <Base title="일본 기본" tab="basics" backdrop={backdrop}>
   <header class="page-head">
-    <h1 class="on-photo">일본 기본</h1>
-    <p class="on-photo">처음 가는 일본, 이것만 알면 돼요</p>
+    <h1>일본 기본</h1>
+    <p>처음 가는 일본, 이것만 알면 돼요</p>
   </header>
 
   {
@@ -164,16 +164,6 @@ const backdrop = (await getEntry('landmarks', 'arashiyama'))!.data.image;
 </script>
 
 <style>
-  .page-head {
-    padding-top: 72px;
-  }
-  .page-head h1 {
-    margin: 0;
-  }
-  .page-head p {
-    margin: 4px 0 0;
-    font-weight: 600;
-  }
   /* 숙소 카드: 들보색 면, 택시에서 가장 먼저 찾는 정보 */
   .hotel {
     margin-top: 18px;

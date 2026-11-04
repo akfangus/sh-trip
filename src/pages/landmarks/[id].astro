@@ -18,8 +18,8 @@ const visit = (await getVisitedLandmarks()).get(landmark.id);
 
 <Base title={nameKo} tab="landmarks" back={{ href: '/landmarks/', label: '교토 명소' }} bleed backdrop={image}>
   <header class="page-head">
-    <p class="ja on-photo" lang="ja">{nameJa}</p>
-    <h1 class="on-photo">{nameKo}</h1>
+    <p class="ja" lang="ja">{nameJa}</p>
+    <h1>{nameKo}</h1>
   </header>
 
   {
@@ -130,17 +130,9 @@ const visit = (await getVisitedLandmarks()).get(landmark.id);
 </Base>
 
 <style>
-  .page-head {
-    padding-top: 230px;
-  }
   .page-head .ja {
     margin: 0;
     font-weight: 700;
-  }
-  .page-head h1 {
-    margin: 0;
-    font-size: 2.6rem;
-    line-height: 1.1;
   }
   .when {
     display: flex;

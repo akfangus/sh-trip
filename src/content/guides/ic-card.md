@@ -1,4 +1,5 @@
 ---
+summary: 교통카드 하나로 전철, 버스, 편의점까지
 title: IC카드(ICOCA) 쓰기
 emoji: "💳"
 order: 4

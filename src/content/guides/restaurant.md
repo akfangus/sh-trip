@@ -1,4 +1,5 @@
 ---
+summary: 식권 자판기, 물과 물수건은 무료, 팁은 없어요
 title: 식당 이용
 emoji: "🍜"
 order: 7

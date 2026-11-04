@@ -27,3 +27,4 @@ pnpm-debug.log*
 dev-dist/
 .vercel/
 screenshot.png
+.taste-skill/

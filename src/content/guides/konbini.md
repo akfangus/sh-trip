@@ -1,4 +1,5 @@
 ---
+summary: 데워 달라고 하기, 봉투와 젓가락 묻는 말
 title: 편의점
 emoji: "🏪"
 order: 8
