@@ -10,7 +10,6 @@ const visited = await getVisitedLandmarks();
 const landmarks = new Map((await getCollection('landmarks')).map((l) => [l.id, l]));
 const going = [...visited.keys()].map((id) => landmarks.get(id)!);
 const backdrop = (await getEntry('landmarks', 'kiyomizudera'))!.data.image;
-const [hotel] = await getCollection('lodging');
 /** 아래 두 칸(가는 곳, 처음 일본이라면)은 같은 줄 수로 맞춰 바닥선을 맞춘다 */
 const LIST_LIMIT = 5;
 const guides = (await getCollection('guides')).sort((a, b) => a.data.order - b.data.order).slice(0, LIST_LIMIT - 1);
@@ -36,7 +35,7 @@ const firstTimed = plan[0].timed[0];
     </header>
 
 
-    <section class="panel today span-9" aria-labelledby="today-title">
+    <section class="panel today span-12" aria-labelledby="today-title">
       <header class="panel-head">
         <h2 id="today-title" data-today-title>1일째 일정</h2>
         <a class="more" href="/itinerary/" data-today-link>전체 일정</a>
@@ -50,21 +49,6 @@ const firstTimed = plan[0].timed[0];
       }
     </section>
 
-    <section class="panel hotel span-3" aria-labelledby="hotel-title">
-      <header class="panel-head">
-        <h2 id="hotel-title">숙소</h2>
-      </header>
-      <p class="hotel-ja" lang="ja">{hotel.data.nameJa}</p>
-      <p class="hotel-addr" lang="ja">{hotel.data.addressJa.replace(/^〒\S+\s*/, '')}</p>
-      <dl class="hotel-times">
-        <dt>체크인</dt>
-        <dd>{hotel.data.checkIn}</dd>
-        <dt>체크아웃</dt>
-        <dd>{hotel.data.checkOut}</dd>
-      </dl>
-      <p class="hotel-access">교토역에서 JR 한 정거장, 우메코지쿄토니시역에서 걸어서 2분. 택시로는 약 10분이에요.</p>
-      <a class="btn primary" href="/basics/#hotel">택시 기사님께 보여주기</a>
-    </section>
 
     <section class="panel span-6" aria-labelledby="going-title">
       <header class="panel-head">
@@ -169,7 +153,7 @@ const firstTimed = plan[0].timed[0];
 <style>
   /*
    * 격자: 폰은 한 줄, 데스크톱은 12칸 (77px × 12 + 16px × 11 = 1100px).
-   * 칸 나눔은 줄마다 바뀌어도 세로선은 위아래로 맞는다: 3·3·3·3 → 9·3 → 6·6
+   * 칸 나눔은 줄마다 바뀌어도 세로선은 위아래로 맞는다: 12 → 6·6
    */
   .home {
     display: grid;
@@ -185,14 +169,8 @@ const firstTimed = plan[0].timed[0];
     .span-12 {
       grid-column: span 12;
     }
-    .span-9 {
-      grid-column: span 9;
-    }
     .span-6 {
       grid-column: span 6;
-    }
-    .span-3 {
-      grid-column: span 3;
     }
   }
   :global(main):has(.home) {
@@ -228,51 +206,7 @@ const firstTimed = plan[0].timed[0];
     white-space: nowrap;
     color: var(--ink);
   }
-  @media (min-width: 1024px) {
-    .today,
-    .hotel {
-      align-self: stretch;
-    }
-  }
 
-  .hotel-ja {
-    margin: 0;
-    font-size: 1.15rem;
-    font-weight: 700;
-  }
-  .hotel-addr {
-    margin: 4px 0 16px;
-    color: var(--ink-soft);
-    font-size: var(--text-small);
-  }
-  .hotel {
-    display: flex;
-    flex-direction: column;
-  }
-  .hotel-times {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 2px 12px;
-    margin: 0 0 12px;
-    font-size: var(--text-small);
-  }
-  .hotel-times dt {
-    color: var(--ink-soft);
-    font-weight: 700;
-  }
-  .hotel-times dd {
-    margin: 0;
-  }
-  .hotel-access {
-    margin: 0 0 16px;
-    font-size: var(--text-small);
-    color: var(--ink-soft);
-  }
-  /* 늘어난 칸에서는 동작 버튼만 맨 아래에 붙인다 */
-  .hotel .btn {
-    width: 100%;
-    margin-top: auto;
-  }
 
   /* 줄 카드: 패널보다 한 단계 밝은 면 + 한 단계 진한 테두리 */
   .rows {
