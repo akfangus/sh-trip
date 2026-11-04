@@ -26,3 +26,4 @@ pnpm-debug.log*
 # pwa dev
 dev-dist/
 .vercel/
+screenshot.png

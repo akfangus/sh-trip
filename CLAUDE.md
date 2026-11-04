@@ -13,8 +13,10 @@
 
 ## 명령
 
-- `npm run dev` (백그라운드: `npx astro dev --background`, `astro dev stop|status|logs`)
-- `npm test` / `npm run check` / `npm run build`
+- dev 서버는 백그라운드로: `npx astro dev --background` (`astro dev stop|status|logs`)
+- `astro preview`는 한 번 띄우면 계속 살아 있고, 다시 실행해도 새 포트로 뜨지 않는다. 확인: `npx astro preview status`, 종료: `npx astro preview stop`
+- `npm run build`는 테스트와 타입 검사까지 돌린다. Vercel 배포도 이 명령을 쓰므로 검사가 실패하면 배포되지 않는다.
+- 폰 폭 화면 확인: `scripts/screenshot.sh <경로> [out.png]` (dev/preview 서버가 떠 있어야 함)
 
 ## 콘텐츠 원칙
 
