@@ -20,7 +20,7 @@ imageCredit:
   license: CC BY-SA 4.0
   sourceUrl: https://commons.wikimedia.org/wiki/File:Kiyomizu-dera,_Kyoto,_November_2016_-01.jpg
 history:
-  title: "불타도 다시 일어선 1,200년의 절"
+  title: "불타도 다시 일어선 1,250년의 절"
   subtitle: "청수사는 왜 이렇게 유명할까요"
   body: |
     청수사는 교토에 오면 누구나 한 번은 들르는 절이에요. 절벽 위 나무 무대에서 내려다보는 풍경, 그리고 맑은 물이 솟는 오토와 폭포를 보러 오지요. 유네스코 세계유산에도 올라 있어요.
