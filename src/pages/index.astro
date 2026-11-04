@@ -1,212 +1,307 @@
 ---
-import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+import { getCollection, getEntry } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import { formatDate, getDays } from '../lib/content';
+import { formatDate, getDays, getVisitedLandmarks } from '../lib/content';
 
 const days = await getDays();
-const tripRange = `${formatDate(days[0].data.date)} ~ ${formatDate(days[days.length - 1].data.date)}`;
+const visited = await getVisitedLandmarks();
+const landmarks = new Map((await getCollection('landmarks')).map((l) => [l.id, l]));
+const going = [...visited.keys()].map((id) => landmarks.get(id)!);
+const heroImage = (await getEntry('landmarks', 'fushimi-inari'))!.data.image;
 
-/** 일정 상태별 표시 방법: 배지 문구와, 시간 앞에 "약"을 붙일지 */
-const STATUS_VIEW = {
-  reserved: { badge: '예약 확정', approx: false },
-  fixed: { badge: '', approx: false },
-  planned: { badge: '', approx: true },
-  optional: { badge: '선택', approx: true },
-} as const;
+/** 홈의 "오늘" 요약에 올릴 항목: 예약 식사와 명소 방문, 정시 일정(항공편) */
+const keyItems = (day: (typeof days)[number]) =>
+  day.data.items.filter((i) => i.status === 'reserved' || i.status === 'fixed' || i.landmark);
 
-const landmarkNames = new Map((await getCollection('landmarks')).map((l) => [l.id, l.data.nameKo]));
+const shortcuts = [
+  { href: '/itinerary/', title: '전체 일정', desc: 'Day 1~4 시간표', icon: '<rect x="4" y="5" width="16" height="15" rx="1.5"/><path d="M4 10h16M9 3v4M15 3v4"/>' },
+  { href: '/landmarks/', title: '교토 명소', desc: '현장에서 읽는 해설', icon: '<path d="M2.5 6.5c3.5 1.3 15.5 1.3 19 0l-.6 2.6c-4.3.9-13.5.9-17.8 0z"/><path d="M5 12h14M7.5 9v12M16.5 9v12"/>' },
+  { href: '/basics/', title: '보여주는 일본어', desc: '눌러서 크게 보여주기', icon: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>' },
+  { href: '/basics/#hotel', title: '숙소 주소', desc: '택시 기사에게 보여주기', icon: '<path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/>' },
+];
 ---
 
-<Base title="교토여행" tab="itinerary">
+<Base title="홈" tab="home" bleed>
   <header class="hero">
-    <p class="eyebrow">우리 가족 교토 여행</p>
-    <h1>{tripRange}</h1>
-    <p class="today muted" data-today hidden></p>
+    <Image src={heroImage} alt="" width={900} quality={60} class="hero-img" loading="eager" />
+    <div class="hero-text">
+      <p class="hero-kicker serif">京都 · 우리 가족 가을 여행</p>
+      <h1>교토여행</h1>
+      <p class="hero-dates">{formatDate(days[0].data.date)} — {formatDate(days[days.length - 1].data.date)}</p>
+      <p class="hero-status serif" data-status></p>
+    </div>
   </header>
 
   {
     days.map((day) => (
-      <details class="day card" id={`day${day.data.day}`} data-day={day.data.day}>
-        <summary>
-          <span class="day-no">Day {day.data.day}</span>
-          <span class="day-text">
-            <strong>{day.data.title}</strong>
-            <span class="muted">{formatDate(day.data.date)}</span>
-          </span>
-          <span class="chev" aria-hidden="true">
-            ›
-          </span>
-        </summary>
-        <ol class="items">
-          {day.data.items.map((item) => (
-            <li class:list={['item', item.status]}>
-              <div class="time">
-                {item.time && (STATUS_VIEW[item.status].approx ? `약 ${item.time}` : item.time)}
-              </div>
-              <div class="body">
-                <div class="title">
-                  {item.title}
-                  {STATUS_VIEW[item.status].badge && <span class="badge">{STATUS_VIEW[item.status].badge}</span>}
-                </div>
-                {item.note && <div class="note muted">{item.note}</div>}
-                {(item.landmark || item.mapsUrl) && (
-                  <div class="actions">
-                    {item.landmark && (
-                      <a class="btn primary" href={`/landmarks/${item.landmark.id}/`}>
-                        {landmarkNames.get(item.landmark.id)} 해설
-                      </a>
-                    )}
-                    {item.mapsUrl && (
-                      <a class="btn" href={item.mapsUrl} target="_blank" rel="noopener">
-                        구글맵
-                      </a>
-                    )}
-                  </div>
-                )}
-              </div>
-            </li>
-          ))}
+      <section class="today" data-today-day={day.data.day} hidden={day.data.day !== 1}>
+        <div class="section-head">
+          <h2 data-today-title>
+            Day {day.data.day} · {day.data.title}
+          </h2>
+          <a class="more" href={`/itinerary/#day${day.data.day}`}>
+            전체 보기 ›
+          </a>
+        </div>
+        <ol class="key-items">
+          {keyItems(day).map((item) => {
+            const lm = item.landmark && landmarks.get(item.landmark.id);
+            return (
+              <li class:list={[item.status]}>
+                <span class="time">{item.time?.split('~')[0]}</span>
+                <span class="what">
+                  {lm ? (
+                    <a href={`/landmarks/${lm.id}/`}>{item.title}</a>
+                  ) : (
+                    item.title
+                  )}
+                  {item.status === 'reserved' && <span class="tag">예약</span>}
+                </span>
+              </li>
+            );
+          })}
         </ol>
-      </details>
+      </section>
     ))
   }
+
+  <div class="section-head">
+    <h2>우리가 가는 곳</h2>
+    <a class="more" href="/landmarks/">모두 보기 ›</a>
+  </div>
+  <div class="rail" role="list">
+    {
+      going.map((l) => (
+        <a class="rail-card" href={`/landmarks/${l.id}/`} role="listitem">
+          <Image src={l.data.image} alt="" width={440} quality={60} />
+          <span class="rail-day">Day {visited.get(l.id)}</span>
+          <span class="rail-name serif">{l.data.nameKo}</span>
+        </a>
+      ))
+    }
+  </div>
+
+  <div class="section-head">
+    <h2>바로가기</h2>
+  </div>
+  <div class="shortcuts">
+    {
+      shortcuts.map((s) => (
+        <a href={s.href} class="shortcut">
+          <svg viewBox="0 0 24 24" aria-hidden="true" set:html={s.icon} />
+          <strong class="serif">{s.title}</strong>
+          <span class="muted">{s.desc}</span>
+        </a>
+      ))
+    }
+  </div>
 </Base>
 
 <script>
   import { tripDayOf } from '../lib/tripDay';
 
-  // 일본 날짜 기준으로 오늘을 펼친다. 여행 전이면 Day 1, 여행 후면 아무것도 펼치지 않는다.
   const today = tripDayOf(new Date());
-  const openDay = today.kind === 'day' ? today.day : today.kind === 'before' ? 1 : null;
-  if (openDay) document.querySelector<HTMLDetailsElement>(`#day${openDay}`)?.setAttribute('open', '');
+  const status = document.querySelector<HTMLElement>('[data-status]')!;
+  status.textContent =
+    today.kind === 'before'
+      ? `출발까지 D-${today.daysLeft}`
+      : today.kind === 'day'
+        ? `오늘은 여행 ${today.day}일째`
+        : '즐거운 여행이었어요';
 
-  const label = document.querySelector<HTMLElement>('[data-today]');
-  if (label) {
-    label.textContent =
-      today.kind === 'day'
-        ? `오늘은 Day ${today.day}예요`
-        : today.kind === 'before'
-          ? '출발 전이에요. 첫날 일정을 미리 확인해 보세요.'
-          : '여행이 끝났어요. 다들 수고 많으셨어요!';
-    label.hidden = false;
-  }
-  if (today.kind === 'day') {
-    document.querySelector(`#day${today.day}`)?.classList.add('is-today');
-  }
+  // 여행 전에는 첫날, 여행 중에는 오늘, 여행 후에는 요약을 숨긴다.
+  const showDay = today.kind === 'day' ? today.day : today.kind === 'before' ? 1 : null;
+  document.querySelectorAll<HTMLElement>('[data-today-day]').forEach((el) => {
+    el.hidden = Number(el.dataset.todayDay) !== showDay;
+    if (!el.hidden && today.kind === 'day') {
+      const title = el.querySelector('[data-today-title]');
+      if (title) title.textContent = `오늘 · ${title.textContent?.split('·').slice(1).join('·').trim()}`;
+    }
+  });
 </script>
 
 <style>
   .hero {
-    padding: 8px 0 16px;
-  }
-  .eyebrow {
-    margin: 0;
-    color: var(--accent);
-    font-weight: 700;
-  }
-  .today {
-    margin: 4px 0 0;
-    font-weight: 700;
-  }
-  .day {
-    padding: 0;
-    margin-bottom: 12px;
+    position: relative;
+    margin: 0 calc(-1 * var(--gutter));
+    min-height: 62vh;
+    display: flex;
+    align-items: flex-end;
+    color: #fff;
     overflow: hidden;
   }
-  .day.is-today {
-    border: 2px solid var(--accent);
+  .hero :global(.hero-img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
-  summary {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    min-height: 72px;
-    padding: 12px 16px;
-    cursor: pointer;
-    list-style: none;
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, #0000 30%, #1b0f0acc 100%);
   }
-  summary::-webkit-details-marker {
+  .hero-text {
+    position: relative;
+    z-index: 1;
+    padding: 0 var(--gutter) 28px;
+  }
+  .hero-kicker {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    opacity: 0.9;
+    letter-spacing: 0.04em;
+  }
+  .hero h1 {
+    font-size: 2.8rem;
+    margin: 2px 0 4px;
+    letter-spacing: 0.02em;
+  }
+  .hero-dates {
+    margin: 0;
+    font-weight: 600;
+    opacity: 0.95;
+  }
+  .hero-status {
+    display: inline-block;
+    margin: 14px 0 0;
+    padding: 4px 14px;
+    background: var(--vermilion);
+    font-size: 1.05rem;
+    border-radius: 2px;
+  }
+  .hero-status:empty {
     display: none;
   }
-  .day-no {
-    flex: none;
-    font-weight: 800;
-    color: #fff;
-    background: var(--accent);
-    border-radius: 12px;
-    padding: 6px 10px;
-    font-size: 0.9rem;
-  }
-  .day-text {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    line-height: 1.35;
-  }
-  .day-text strong {
-    font-size: 1.05rem;
-  }
-  .chev {
-    font-size: 1.6rem;
-    color: var(--muted);
-    transition: transform 0.2s;
-  }
-  details[open] .chev {
-    transform: rotate(90deg);
-  }
-  .items {
+  .key-items {
     list-style: none;
     margin: 0;
-    padding: 0 16px 8px;
-    border-top: 1px solid var(--line);
+    padding: 0;
+    border-top: 1px solid var(--rule);
   }
-  .item {
+  .key-items li {
     display: grid;
-    grid-template-columns: 6.2em 1fr;
+    grid-template-columns: 4.2em 1fr;
     gap: 12px;
     padding: 14px 0;
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid var(--rule);
+    align-items: baseline;
   }
-  .item:last-child {
-    border-bottom: none;
-  }
-  .time {
-    font-size: 0.85rem;
+  .key-items .time {
+    font-family: var(--serif);
+    font-weight: 800;
     font-variant-numeric: tabular-nums;
-    padding-top: 3px;
-    color: var(--muted);
+    color: var(--ink-soft);
   }
-  .item.fixed .time,
-  .item.reserved .time {
-    color: var(--text);
+  .key-items .reserved .time {
+    color: var(--vermilion);
+  }
+  .key-items .what {
     font-weight: 700;
-    font-size: 0.95rem;
   }
-  .item.reserved .time {
-    color: var(--accent);
+  .key-items a {
+    color: var(--ink);
+    text-decoration-color: var(--vermilion);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
   }
-  .title {
-    font-weight: 600;
-  }
-  .title .badge {
-    margin-left: 6px;
+  .key-items .tag {
+    margin-left: 8px;
     vertical-align: 2px;
   }
-  .item.optional .badge {
-    background: var(--line);
-    color: var(--muted);
-  }
-  .note {
-    font-size: 0.9rem;
-  }
-  .actions {
+  .rail {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 10px;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    margin: 0 calc(-1 * var(--gutter));
+    padding: 0 var(--gutter) 6px;
+    scrollbar-width: none;
   }
-  .actions .btn {
-    min-height: 48px;
-    font-size: 0.95rem;
+  .rail::-webkit-scrollbar {
+    display: none;
+  }
+  .rail-card {
+    position: relative;
+    flex: none;
+    width: 62%;
+    max-width: 240px;
+    aspect-ratio: 3 / 4;
+    scroll-snap-align: start;
+    border-radius: 4px;
+    overflow: hidden;
+    color: #fff;
+    text-decoration: none;
+  }
+  .rail-card :global(img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .rail-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, #0000 45%, #120a06d9 100%);
+  }
+  .rail-day,
+  .rail-name {
+    position: absolute;
+    z-index: 1;
+    left: 14px;
+  }
+  .rail-day {
+    top: 12px;
+    padding: 0 8px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    background: var(--vermilion);
+    border-radius: 2px;
+  }
+  .rail-name {
+    bottom: 14px;
+    right: 14px;
+    font-size: 1.25rem;
+    line-height: 1.3;
+  }
+  .shortcuts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+  }
+  .shortcut {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 128px;
+    padding: 16px;
+    background: var(--sheet);
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .shortcut svg {
+    width: 30px;
+    height: 30px;
+    margin-bottom: 8px;
+    fill: none;
+    stroke: var(--vermilion);
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .shortcut strong {
+    font-size: 1.08rem;
+  }
+  .shortcut span {
+    font-size: 0.85rem;
+    line-height: 1.4;
   }
 </style>

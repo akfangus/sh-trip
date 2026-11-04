@@ -1,4 +1,7 @@
-export type TripDay = { kind: 'day'; day: number } | { kind: 'before' } | { kind: 'after' };
+export type TripDay =
+  | { kind: 'day'; day: number }
+  | { kind: 'before'; daysLeft: number }
+  | { kind: 'after' };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** 일본 시간은 UTC+9 고정(서머타임 없음) */
@@ -17,7 +20,7 @@ export function tripDateOf(day: number) {
 export function tripDayOf(instant: Date): TripDay {
   const jstDateMs = Math.floor((instant.getTime() + JST_OFFSET_MS) / DAY_MS) * DAY_MS;
   const day = (jstDateMs - TRIP_START_JST_DATE_MS) / DAY_MS + 1;
-  if (day < 1) return { kind: 'before' };
+  if (day < 1) return { kind: 'before', daysLeft: 1 - day };
   if (day > TRIP_DAYS) return { kind: 'after' };
   return { kind: 'day', day };
 }

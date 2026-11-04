@@ -5,7 +5,8 @@
 
 ## 구조
 
-- 탭 3개: `일정`(`/`), `교토 명소`(`/landmarks/`), `일본 기본`(`/basics/`)
+- 탭 4개: `홈`(`/`), `일정`(`/itinerary/`, `#dayN`으로 날짜 선택), `교토 명소`(`/landmarks/`), `일본 기본`(`/basics/`, 숙소 카드는 `#hotel`)
+- 디자인 토큰과 공통 스타일은 `src/layouts/Base.astro`의 전역 style 하나에 있다
 - 콘텐츠는 `src/content/`, 스키마는 `src/content.config.ts`
   - 일정(`itinerary.yaml`)이 명소를 `landmark: <id>`로 참조하면 그 명소가 "우리가 가는 곳"이 된다. 별도 플래그 없음.
 - 여행 날짜 계산(`src/lib/tripDay.ts`)은 항상 JST 기준. 유일한 테스트 seam.

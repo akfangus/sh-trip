@@ -1,37 +1,148 @@
 ---
+import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
-import LandmarkCard from '../../components/LandmarkCard.astro';
 import Base from '../../layouts/Base.astro';
-import { getVisitedLandmarks } from '../../lib/content';
+import { formatDate, getDays, getVisitedLandmarks } from '../../lib/content';
 
-const all = await getCollection('landmarks');
+const all = new Map((await getCollection('landmarks')).map((l) => [l.id, l]));
 const visited = await getVisitedLandmarks();
-const visitOrder = [...visited.keys()];
+const days = await getDays();
 
-const going = all
-  .filter((l) => visited.has(l.id))
-  .sort((a, b) => visitOrder.indexOf(a.id) - visitOrder.indexOf(b.id));
-const more = all
+/** 가는 곳을 처음 방문하는 Day 별로 묶는다 */
+const byDay = days
+  .map((day) => ({
+    day,
+    landmarks: [...visited]
+      .filter(([, d]) => d === day.data.day)
+      .map(([id]) => all.get(id)!),
+  }))
+  .filter((g) => g.landmarks.length > 0);
+
+const others = [...all.values()]
   .filter((l) => !visited.has(l.id))
   .sort((a, b) => a.data.nameKo.localeCompare(b.data.nameKo, 'ko'));
 ---
 
 <Base title="교토 명소" tab="landmarks">
   <h1>교토 명소</h1>
-  <p class="lead">현장에서 읽는 짧은 해설이에요.</p>
-
-  <h2>우리가 가는 곳</h2>
-  {going.map((l) => <LandmarkCard landmark={l} day={visited.get(l.id)} />)}
+  <p class="lead">그 자리에 서서 1~2분이면 읽을 수 있는 해설이에요.</p>
 
   {
-    more.length > 0 && (
-      <>
-        <h2>더 알아보기</h2>
-        <p class="lead">일정에는 없지만 시간이 나면 들러 볼 만한 곳이에요.</p>
-        {more.map((l) => (
-          <LandmarkCard landmark={l} />
+    byDay.map(({ day, landmarks }) => (
+      <section>
+        <div class="section-head">
+          <h2>
+            {day.data.day}일째 · {formatDate(day.data.date).replace(/^\d+월 /, '')}
+          </h2>
+        </div>
+        {landmarks.map((l) => (
+          <a class="feature" href={`/landmarks/${l.id}/`}>
+            <Image src={l.data.image} alt="" width={800} quality={60} />
+            <span class="feature-text">
+              <span class="ja" lang="ja">
+                {l.data.nameJa}
+              </span>
+              <strong class="serif">{l.data.nameKo}</strong>
+              <span class="summary">{l.data.summary}</span>
+            </span>
+          </a>
         ))}
-      </>
+      </section>
+    ))
+  }
+
+  {
+    others.length > 0 && (
+      <section>
+        <div class="section-head">
+          <h2>더 알아보기</h2>
+        </div>
+        <p class="lead">일정에는 없지만 시간이 나면 들러 볼 만한 곳이에요.</p>
+        <div class="grid">
+          {others.map((l) => (
+            <a class="small" href={`/landmarks/${l.id}/`}>
+              <Image src={l.data.image} alt="" width={400} quality={60} />
+              <strong class="serif">{l.data.nameKo}</strong>
+              <span class="muted">{l.data.summary}</span>
+            </a>
+          ))}
+        </div>
+      </section>
     )
   }
 </Base>
+
+<style>
+  .feature {
+    position: relative;
+    display: block;
+    aspect-ratio: 4 / 3;
+    margin-bottom: 14px;
+    border-radius: 4px;
+    overflow: hidden;
+    color: #fff;
+    text-decoration: none;
+  }
+  .feature :global(img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .feature::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, #0000 35%, #120a06e0 100%);
+  }
+  .feature-text {
+    position: absolute;
+    z-index: 1;
+    left: 18px;
+    right: 18px;
+    bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.4;
+  }
+  .feature .ja {
+    font-size: 0.8rem;
+    opacity: 0.85;
+  }
+  .feature strong {
+    font-size: 1.6rem;
+    line-height: 1.25;
+    margin: 2px 0 4px;
+  }
+  .feature .summary {
+    font-size: 0.95rem;
+    opacity: 0.95;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 14px;
+  }
+  .small {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    color: var(--ink);
+    text-decoration: none;
+    line-height: 1.4;
+  }
+  .small :global(img) {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+  .small strong {
+    font-size: 1.05rem;
+  }
+  .small span {
+    font-size: 0.85rem;
+  }
+</style>

@@ -19,8 +19,8 @@ export default defineConfig({
         start_url: '/',
         scope: '/',
         display: 'standalone',
-        background_color: '#fff8f0',
-        theme_color: '#d6302b',
+        background_color: '#efede8',
+        theme_color: '#efede8',
         icons: [
           { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
           { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
@@ -32,6 +32,18 @@ export default defineConfig({
         globPatterns: ['**/*.{html,js,css,svg,png,jpg,jpeg,webp,avif,ico,txt}'],
         navigateFallback: null,
         cleanupOutdatedCaches: true,
+        // 제목용 웹폰트(Google Fonts)는 처음 받을 때 저장해 두고 이후 오프라인에서 쓴다.
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts',
+              expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
       experimental: { directoryAndTrailingSlashHandler: true },
     }),
