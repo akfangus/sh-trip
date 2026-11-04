@@ -7,7 +7,7 @@ import { formatDateLong, getDays, getVisitedLandmarks } from '../../lib/content'
 const all = new Map((await getCollection('landmarks')).map((l) => [l.id, l]));
 const visited = await getVisitedLandmarks();
 const days = await getDays();
-const backdrop = (await getEntry('landmarks', 'fushimi-inari'))!.data.image;
+const backdrop = (await getEntry('landmarks', 'kinkakuji'))!.data.image;
 
 /** 가는 곳을 처음 방문하는 날별로 묶는다 */
 const byDay = days

@@ -5,7 +5,7 @@ import Base from '../../layouts/Base.astro';
 import { formatDateLong, formatDayShort, getDays } from '../../lib/content';
 
 const days = await getDays();
-const backdrop = (await getEntry('landmarks', 'sannenzaka'))!.data.image;
+const backdrop = (await getEntry('landmarks', 'philosophers-path'))!.data.image;
 ---
 
 <Base title="일정" tab="itinerary" backdrop={backdrop}>

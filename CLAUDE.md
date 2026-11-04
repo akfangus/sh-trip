@@ -8,7 +8,9 @@
 - 탭 4개: `홈`(`/`), `일정`(`/itinerary/`, `#dayN`으로 날짜 선택), `교토 명소`(`/landmarks/`), `일본 기본`(`/basics/`, 숙소 카드는 `#hotel`)
 - 디자인 토큰과 공통 스타일은 `src/layouts/Base.astro`의 전역 style 하나에 있다
 - 콘텐츠는 `src/content/`, 스키마는 `src/content.config.ts`
-  - 일정(`itinerary.yaml`)이 명소를 `landmark: <id>`로 참조하면 그 명소가 "우리가 가는 곳"이 된다. 별도 플래그 없음.
+  - 일정(`itinerary.yaml`)은 오전/오후/저녁(`period`) 칸으로 묶고, 시각(`time`)은 예약·비행기·하루카에만 쓴다.
+  - 일정이 명소를 `landmark: <id>`로 참조하면 그 명소가 "우리가 가는 곳"이 되고, 상세의 "○일째 ○○에 가요"도 여기서 계산된다. 별도 플래그 없음.
+  - 명소의 "더 깊이 알아보기"(`history` 시대별 연표 + `stories` 2개)는 필수다.
 - 여행 날짜 계산(`src/lib/tripDay.ts`)은 항상 JST 기준. 유일한 테스트 seam.
 - `trailingSlash: 'always'`: 내부 링크는 항상 `/`로 끝낸다(오프라인 precache 키와 일치해야 함).
 

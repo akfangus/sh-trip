@@ -13,7 +13,7 @@ const renderedGuides = await Promise.all(
 
 const [hotel] = await getCollection('lodging');
 const TAXI_PHRASE = 'この住所までお願いします。';
-const backdrop = (await getEntry('landmarks', 'gion'))!.data.image;
+const backdrop = (await getEntry('landmarks', 'arashiyama'))!.data.image;
 ---
 
 <Base title="일본 기본" tab="basics" backdrop={backdrop}>

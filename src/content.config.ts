@@ -33,8 +33,7 @@ const landmarks = defineCollection({
             .array(z.object({ era: z.string(), year: z.string(), text: z.string() }))
             .min(3)
             .max(8),
-        })
-        .optional(),
+        }),
       /** 더 깊이 알아보기 ②③: 재밌는 이야기 */
       stories: z
         .array(
@@ -46,8 +45,7 @@ const landmarks = defineCollection({
             source: z.string(),
           }),
         )
-        .length(2)
-        .optional(),
+        .length(2),
     }),
 });
 
