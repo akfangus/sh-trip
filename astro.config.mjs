@@ -19,8 +19,8 @@ export default defineConfig({
         start_url: '/',
         scope: '/',
         display: 'standalone',
-        background_color: '#efede8',
-        theme_color: '#efede8',
+        background_color: '#e6e7e6',
+        theme_color: '#e6e7e6',
         icons: [
           { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
           { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
@@ -29,16 +29,17 @@ export default defineConfig({
       },
       workbox: {
         // 앱 전체(페이지, 이미지 포함)를 미리 받아 두어 현지에서 데이터 없이도 보이게 한다.
-        globPatterns: ['**/*.{html,js,css,svg,png,jpg,jpeg,webp,avif,ico,txt}'],
+        globPatterns: ['**/*.{html,js,css,svg,png,jpg,jpeg,webp,avif,ico,txt,woff2}'],
         navigateFallback: null,
         cleanupOutdatedCaches: true,
-        // 제목용 웹폰트(Google Fonts)는 처음 받을 때 저장해 두고 이후 오프라인에서 쓴다.
+        // 본문 웹폰트(Pretendard, jsDelivr)는 처음 받을 때 저장해 두고 이후 오프라인에서 쓴다.
+        // 제목 서체는 public/fonts 에 들어 있어 위 globPatterns 로 미리 받는다.
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
+            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/gh\/orioncactus\/pretendard.*/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'google-fonts',
+              cacheName: 'pretendard',
               expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 365 },
               cacheableResponse: { statuses: [0, 200] },
             },

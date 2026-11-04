@@ -1,0 +1,11 @@
+kyoto-trip-serif-bold.woff2
+
+이 파일은 네이버 "마루부리(MaruBuri) Bold"를 수정한 것입니다.
+- 수정 내용: 한글 KS X 1001 2,350자, 기본 라틴 문자, 일부 문장부호만 남긴 서브셋, 서체 이름 변경
+- 원본 저작권: © NAVER Corp. © NAVER Cultural Foundation Corp.
+- 디자인: AG Typography Institute (Noh Eunyou, Noheul Lee, Ku Moa)
+- 라이선스: 네이버 글꼴 라이선스(나눔 글꼴과 같은 SIL Open Font License 1.1)
+  https://hangeul.naver.com/font
+  https://openfontlicense.org/open-font-license-official-text/
+
+이 앱에는 네이버에서 제공한 마루부리 글꼴이 적용되어 있습니다.
