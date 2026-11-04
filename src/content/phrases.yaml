@@ -1,0 +1,75 @@
+- id: thank-you
+  ja: ありがとうございます
+  ko: 감사합니다
+  reading: 아리가토- 고자이마스
+  category: 기본
+- id: excuse-me
+  ja: すみません
+  ko: 실례합니다 / 저기요 (말을 걸 때, 길을 비켜 달라고 할 때)
+  reading: 스미마셍
+  category: 기본
+- id: no-japanese
+  ja: 日本語が話せません。
+  ko: 일본어를 못해요.
+  reading: 니홍고가 하나세마셍
+  category: 기본
+- id: where-toilet
+  ja: お手洗いはどこですか？
+  ko: 화장실은 어디예요?
+  reading: 오테아라이와 도코데스카?
+  category: 도움
+- id: this-please
+  ja: これをください。
+  ko: 이거 주세요. (메뉴를 가리키며)
+  reading: 코레오 쿠다사이
+  category: 식당
+- id: food-allergy
+  ja: 食べられないものがあります。これです。
+  ko: 못 먹는 음식이 있어요. 이거예요. (재료를 가리키며)
+  reading: 타베라레나이 모노가 아리마스. 코레데스
+  category: 식당
+- id: not-spicy
+  ja: 辛くしないでください。
+  ko: 맵지 않게 해 주세요.
+  reading: 카라쿠 시나이데 쿠다사이
+  category: 식당
+- id: check-please
+  ja: お会計をお願いします。
+  ko: 계산해 주세요.
+  reading: 오카이케-오 오네가이시마스
+  category: 식당
+- id: card-ok
+  ja: カードは使えますか？
+  ko: 카드 되나요?
+  reading: 카-도와 츠카에마스카?
+  category: 쇼핑
+- id: heat-please
+  ja: 温めてください。
+  ko: 데워 주세요. (편의점 도시락 등)
+  reading: 아타타메테 쿠다사이
+  category: 쇼핑
+- id: bag-please
+  ja: 袋をください。
+  ko: 봉투 주세요.
+  reading: 후쿠로오 쿠다사이
+  category: 쇼핑
+- id: taxi-address
+  ja: この住所までお願いします。
+  ko: 이 주소로 가 주세요.
+  reading: 코노 쥬-쇼마데 오네가이시마스
+  category: 교통
+- id: where-station
+  ja: ○○駅はどこですか？
+  ko: ○○역은 어디예요?
+  reading: ○○에키와 도코데스카?
+  category: 교통
+- id: lost
+  ja: 道に迷いました。ここに行きたいです。
+  ko: 길을 잃었어요. 여기에 가고 싶어요. (지도를 보여주며)
+  reading: 미치니 마요이마시타. 코코니 이키타이데스
+  category: 도움
+- id: take-photo
+  ja: 写真を撮っていただけますか？
+  ko: 사진 좀 찍어 주시겠어요?
+  reading: 샤싱오 톳테 이타다케마스카?
+  category: 도움

@@ -1,0 +1,214 @@
+---
+import { getEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { formatDate, getDays } from '../lib/content';
+
+const days = await getDays();
+
+const STATUS_LABEL = { reserved: '예약 확정', fixed: '', planned: '', optional: '선택' } as const;
+
+// 일정 항목에서 참조한 명소 이름을 미리 모아 둔다.
+const landmarkNames = new Map<string, string>();
+for (const day of days) {
+  for (const item of day.data.items) {
+    if (item.landmark && !landmarkNames.has(item.landmark.id)) {
+      const entry = await getEntry(item.landmark);
+      if (entry) landmarkNames.set(entry.id, entry.data.nameKo);
+    }
+  }
+}
+---
+
+<Base title="교토여행" tab="itinerary">
+  <header class="hero">
+    <p class="eyebrow">우리 가족 교토 여행</p>
+    <h1>11월 5일 (목) ~ 8일 (일)</h1>
+    <p class="today muted" data-today hidden></p>
+  </header>
+
+  {
+    days.map((day) => (
+      <details class="day card" id={`day${day.data.day}`} data-day={day.data.day}>
+        <summary>
+          <span class="day-no">Day {day.data.day}</span>
+          <span class="day-text">
+            <strong>{day.data.title}</strong>
+            <span class="muted">{formatDate(day.data.date)}</span>
+          </span>
+          <span class="chev" aria-hidden="true">
+            ›
+          </span>
+        </summary>
+        <ol class="items">
+          {day.data.items.map((item) => (
+            <li class:list={['item', item.status]}>
+              <div class="time">
+                {item.time && (item.status === 'planned' || item.status === 'optional' ? `약 ${item.time}` : item.time)}
+              </div>
+              <div class="body">
+                <div class="title">
+                  {item.title}
+                  {STATUS_LABEL[item.status] && <span class="badge">{STATUS_LABEL[item.status]}</span>}
+                </div>
+                {item.note && <div class="note muted">{item.note}</div>}
+                {(item.landmark || item.mapsUrl) && (
+                  <div class="actions">
+                    {item.landmark && (
+                      <a class="btn primary" href={`/landmarks/${item.landmark.id}/`}>
+                        {landmarkNames.get(item.landmark.id)} 해설
+                      </a>
+                    )}
+                    {item.mapsUrl && (
+                      <a class="btn" href={item.mapsUrl} target="_blank" rel="noopener">
+                        지도
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </details>
+    ))
+  }
+</Base>
+
+<script>
+  import { tripDayOf } from '../lib/tripDay';
+
+  // 일본 날짜 기준으로 오늘을 펼친다. 여행 전이면 Day 1, 여행 후면 아무것도 펼치지 않는다.
+  const today = tripDayOf(new Date());
+  const openDay = today.kind === 'day' ? today.day : today.kind === 'before' ? 1 : null;
+  if (openDay) document.querySelector<HTMLDetailsElement>(`#day${openDay}`)?.setAttribute('open', '');
+
+  const label = document.querySelector<HTMLElement>('[data-today]');
+  if (label) {
+    label.textContent =
+      today.kind === 'day'
+        ? `오늘은 Day ${today.day} 입니다`
+        : today.kind === 'before'
+          ? '출발 전이에요. 첫날 일정을 미리 확인해 보세요.'
+          : '여행이 끝났어요. 수고하셨습니다!';
+    label.hidden = false;
+  }
+  if (today.kind === 'day') {
+    document.querySelector(`#day${today.day}`)?.classList.add('is-today');
+  }
+</script>
+
+<style>
+  .hero {
+    padding: 8px 0 16px;
+  }
+  .eyebrow {
+    margin: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .today {
+    margin: 4px 0 0;
+    font-weight: 700;
+  }
+  .day {
+    padding: 0;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .day.is-today {
+    border: 2px solid var(--accent);
+  }
+  summary {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 72px;
+    padding: 12px 16px;
+    cursor: pointer;
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  .day-no {
+    flex: none;
+    font-weight: 800;
+    color: #fff;
+    background: var(--accent);
+    border-radius: 12px;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+  .day-text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    line-height: 1.35;
+  }
+  .day-text strong {
+    font-size: 1.05rem;
+  }
+  .chev {
+    font-size: 1.6rem;
+    color: var(--muted);
+    transition: transform 0.2s;
+  }
+  details[open] .chev {
+    transform: rotate(90deg);
+  }
+  .items {
+    list-style: none;
+    margin: 0;
+    padding: 0 16px 8px;
+    border-top: 1px solid var(--line);
+  }
+  .item {
+    display: grid;
+    grid-template-columns: 6.2em 1fr;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .item:last-child {
+    border-bottom: none;
+  }
+  .time {
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    padding-top: 3px;
+    color: var(--muted);
+  }
+  .item.fixed .time,
+  .item.reserved .time {
+    color: var(--text);
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  .item.reserved .time {
+    color: var(--accent);
+  }
+  .title {
+    font-weight: 600;
+  }
+  .title .badge {
+    margin-left: 6px;
+    vertical-align: 2px;
+  }
+  .item.optional .badge {
+    background: var(--line);
+    color: var(--muted);
+  }
+  .note {
+    font-size: 0.9rem;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .actions .btn {
+    min-height: 44px;
+    font-size: 0.95rem;
+  }
+</style>

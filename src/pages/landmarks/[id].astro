@@ -1,0 +1,124 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const landmarks = await getCollection('landmarks');
+  return landmarks.map((landmark) => ({ params: { id: landmark.id }, props: { landmark } }));
+}
+
+const { landmark } = Astro.props;
+const { nameKo, nameJa, summary, highlights, anecdotes, hours, fee, mapsUrl, image, imageCredit } =
+  landmark.data;
+const { Content } = await render(landmark);
+---
+
+<Base title={nameKo} tab="landmarks" back={{ href: '/landmarks/', label: '교토 명소' }}>
+  <figure class="hero">
+    <Image src={image} alt={nameKo} width={800} quality={60} />
+    <figcaption class="muted">
+      사진: <a href={imageCredit.sourceUrl} target="_blank" rel="noopener">{imageCredit.author}</a>, {
+        imageCredit.license
+      }
+    </figcaption>
+  </figure>
+
+  <h1>{nameKo}</h1>
+  <p class="ja muted" lang="ja">{nameJa}</p>
+  <p class="summary">{summary}</p>
+
+  <section>
+    <h2>이야기</h2>
+    <div class="story"><Content /></div>
+  </section>
+
+  <section>
+    <h2>여기서 꼭 볼 것</h2>
+    <ol class="highlights">
+      {highlights.map((h) => <li>{h}</li>)}
+    </ol>
+  </section>
+
+  <section>
+    <h2>알아두면 재밌는 이야기</h2>
+    {anecdotes.map((a) => <p class="anecdote card">{a}</p>)}
+  </section>
+
+  <section>
+    <h2>기본 정보</h2>
+    <dl class="info card">
+      <dt>운영시간</dt>
+      <dd>{hours}</dd>
+      <dt>입장료</dt>
+      <dd>{fee}</dd>
+    </dl>
+    <p class="muted small">운영시간과 요금은 바뀔 수 있어요.</p>
+    <a class="btn primary wide" href={mapsUrl} target="_blank" rel="noopener">구글맵에서 열기</a>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    margin: 0 -16px 16px;
+  }
+  .hero :global(img) {
+    width: 100%;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+  }
+  figcaption {
+    font-size: 0.75rem;
+    padding: 4px 16px 0;
+  }
+  figcaption a {
+    color: inherit;
+  }
+  .ja {
+    margin: 0;
+  }
+  .summary {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 12px 0 0;
+    padding-left: 12px;
+    border-left: 4px solid var(--accent);
+  }
+  .story :global(p) {
+    margin: 0 0 1em;
+  }
+  .highlights {
+    padding-left: 1.4em;
+    margin: 0;
+  }
+  .highlights li {
+    margin-bottom: 10px;
+  }
+  .highlights li::marker {
+    color: var(--accent);
+    font-weight: 800;
+  }
+  .anecdote {
+    margin: 0 0 12px;
+  }
+  .info {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 16px;
+    margin: 0 0 8px;
+  }
+  dt {
+    font-weight: 700;
+    color: var(--muted);
+  }
+  dd {
+    margin: 0;
+  }
+  .small {
+    font-size: 0.85rem;
+    margin: 0 0 16px;
+  }
+  .wide {
+    width: 100%;
+  }
+</style>

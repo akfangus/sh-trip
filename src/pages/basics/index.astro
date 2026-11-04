@@ -1,0 +1,316 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+const phrases = await getCollection('phrases');
+const CATEGORY_ORDER = ['기본', '식당', '교통', '쇼핑', '도움'];
+const rank = (c: string) => (CATEGORY_ORDER.includes(c) ? CATEGORY_ORDER.indexOf(c) : CATEGORY_ORDER.length);
+const categories = [...new Set(phrases.map((p) => p.data.category))].sort((a, b) => rank(a) - rank(b));
+
+const guides = (await getCollection('guides')).sort((a, b) => a.data.order - b.data.order);
+const renderedGuides = await Promise.all(
+  guides.map(async (g) => ({ guide: g, Content: (await render(g)).Content })),
+);
+
+const [hotel] = await getCollection('lodging');
+const TAXI_PHRASE = 'この住所までお願いします。';
+---
+
+<Base title="일본 기본" tab="basics">
+  <h1>일본 기본</h1>
+  <p class="lead">처음 일본에 가면 알아두면 좋은 것들이에요.</p>
+
+  <h2>보여주는 일본어</h2>
+  <p class="lead">누르면 일본어가 크게 나와요. 화면을 상대에게 보여주세요.</p>
+  {
+    categories.map((cat) => (
+      <section class="phrase-group">
+        <h3>{cat}</h3>
+        <div class="phrases">
+          {phrases
+            .filter((p) => p.data.category === cat)
+            .map((p) => (
+              <button class="phrase card" type="button" data-show-ja={p.data.ja} data-show-ko={p.data.ko}>
+                <span class="ko">{p.data.ko}</span>
+                <span class="ja muted" lang="ja">
+                  {p.data.ja}
+                </span>
+              </button>
+            ))}
+        </div>
+      </section>
+    ))
+  }
+
+  <h2>상황별 안내</h2>
+  {
+    renderedGuides.map(({ guide, Content }) => (
+      <>
+        <details class="guide card">
+          <summary>
+            <span class="emoji" aria-hidden="true">
+              {guide.data.emoji}
+            </span>
+            <strong>{guide.data.title}</strong>
+            <span class="chev" aria-hidden="true">
+              ›
+            </span>
+          </summary>
+          <div class="guide-body">
+            <Content />
+          </div>
+        </details>
+        {guide.id === 'taxi' && hotel && (
+          <section class="hotel card" id="hotel">
+            <p class="eyebrow">우리 숙소</p>
+            <h3>{hotel.data.nameKo}</h3>
+            <p class="hotel-ja" lang="ja">
+              {hotel.data.nameJa}
+            </p>
+            <p class="address" lang="ja">
+              {hotel.data.addressJa}
+            </p>
+            <div class="hotel-actions">
+              <button
+                class="btn primary"
+                type="button"
+                data-show-ja={`${TAXI_PHRASE}\n${hotel.data.nameJa}\n${hotel.data.addressJa}`}
+                data-show-ko="이 주소로 가 주세요."
+              >
+                택시 기사에게 보여주기
+              </button>
+              <a class="btn" href={hotel.data.mapsUrl} target="_blank" rel="noopener">
+                구글맵
+              </a>
+            </div>
+            <dl>
+              <dt>체크인</dt>
+              <dd>{hotel.data.checkIn}</dd>
+              <dt>체크아웃</dt>
+              <dd>{hotel.data.checkOut}</dd>
+            </dl>
+            <p class="muted access-title">교토역에서 가는 법</p>
+            <ul class="access">
+              {hotel.data.access.map((a) => (
+                <li>{a}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </>
+    ))
+  }
+
+  <dialog class="show" aria-label="일본어 보여주기">
+    <div class="show-inner">
+      <p class="show-ja" lang="ja" data-ja></p>
+      <p class="show-ko muted" data-ko></p>
+      <div class="show-actions">
+        <button class="btn" type="button" data-speak hidden>🔊 읽어 주기</button>
+        <button class="btn primary" type="button" data-close>닫기</button>
+      </div>
+    </div>
+  </dialog>
+</Base>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('dialog.show')!;
+  const jaEl = dialog.querySelector<HTMLElement>('[data-ja]')!;
+  const koEl = dialog.querySelector<HTMLElement>('[data-ko]')!;
+  const speakBtn = dialog.querySelector<HTMLButtonElement>('[data-speak]')!;
+
+  document.querySelectorAll<HTMLElement>('[data-show-ja]').forEach((el) => {
+    el.addEventListener('click', () => {
+      jaEl.textContent = el.dataset.showJa ?? '';
+      koEl.textContent = el.dataset.showKo ?? '';
+      dialog.showModal();
+    });
+  });
+  dialog.querySelector('[data-close]')!.addEventListener('click', () => dialog.close());
+  dialog.addEventListener('close', () => window.speechSynthesis?.cancel());
+
+  // 일본어 음성이 있는 기기에서만 🔊 버튼을 보여준다.
+  let jaVoice: SpeechSynthesisVoice | undefined;
+  function findJaVoice() {
+    jaVoice = window.speechSynthesis?.getVoices().find((v) => v.lang.replace('_', '-').startsWith('ja'));
+    speakBtn.hidden = !jaVoice;
+  }
+  if ('speechSynthesis' in window) {
+    findJaVoice();
+    window.speechSynthesis.addEventListener('voiceschanged', findJaVoice);
+  }
+  speakBtn.addEventListener('click', () => {
+    if (!jaVoice) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(jaEl.textContent ?? '');
+    u.voice = jaVoice;
+    u.lang = jaVoice.lang;
+    u.rate = 0.9;
+    window.speechSynthesis.speak(u);
+  });
+</script>
+
+<style>
+  h3 {
+    font-size: 1rem;
+    color: var(--muted);
+    margin: 16px 0 8px;
+  }
+  .phrases {
+    display: grid;
+    gap: 10px;
+  }
+  .phrase {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    width: 100%;
+    min-height: 64px;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+  .phrase .ko {
+    font-weight: 700;
+    font-size: 1.05rem;
+  }
+  .phrase .ja {
+    font-size: 0.9rem;
+  }
+  .guide {
+    padding: 0;
+    margin-bottom: 10px;
+  }
+  .guide summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 64px;
+    padding: 10px 16px;
+    cursor: pointer;
+    list-style: none;
+  }
+  .guide summary::-webkit-details-marker {
+    display: none;
+  }
+  .emoji {
+    font-size: 1.5rem;
+  }
+  .guide summary strong {
+    flex: 1;
+  }
+  .chev {
+    font-size: 1.6rem;
+    color: var(--muted);
+    transition: transform 0.2s;
+  }
+  details[open] .chev {
+    transform: rotate(90deg);
+  }
+  .guide-body {
+    padding: 0 16px 12px;
+    border-top: 1px solid var(--line);
+  }
+  .guide-body :global(ul) {
+    padding-left: 1.2em;
+    margin: 12px 0 0;
+  }
+  .guide-body :global(li) {
+    margin-bottom: 8px;
+  }
+  .hotel {
+    border: 2px solid var(--accent);
+    margin: 0 0 10px;
+  }
+  .hotel .eyebrow {
+    margin: 0;
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+  .hotel h3 {
+    color: var(--text);
+    font-size: 1.2rem;
+    margin: 0;
+  }
+  .hotel-ja {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+  .address {
+    font-size: 1.1rem;
+    margin: 4px 0 12px;
+  }
+  .hotel-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .hotel dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 16px;
+    margin: 16px 0 8px;
+  }
+  .hotel dt {
+    font-weight: 700;
+    color: var(--muted);
+  }
+  .hotel dd {
+    margin: 0;
+  }
+  .access-title {
+    margin: 8px 0 0;
+    font-weight: 700;
+  }
+  .access {
+    margin: 4px 0 0;
+    padding-left: 1.2em;
+  }
+  dialog.show {
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: var(--surface);
+    color: var(--text);
+  }
+  dialog.show::backdrop {
+    background: rgb(0 0 0 / 0.5);
+  }
+  .show-inner {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100%;
+    padding: calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
+  }
+  .show-ja {
+    font-size: clamp(2rem, 9vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.4;
+    margin: 0 0 16px;
+    white-space: pre-line;
+    word-break: normal;
+    line-break: strict;
+  }
+  .show-ko {
+    font-size: 1.1rem;
+    margin: 0 0 32px;
+  }
+  .show-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .show-actions .btn {
+    flex: 1;
+    min-height: 56px;
+  }
+</style>

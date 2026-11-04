@@ -1,0 +1,37 @@
+---
+import { getCollection } from 'astro:content';
+import LandmarkCard from '../../components/LandmarkCard.astro';
+import Base from '../../layouts/Base.astro';
+import { getVisitedLandmarks } from '../../lib/content';
+
+const all = await getCollection('landmarks');
+const visited = await getVisitedLandmarks();
+const visitOrder = [...visited.keys()];
+
+const going = all
+  .filter((l) => visited.has(l.id))
+  .sort((a, b) => visitOrder.indexOf(a.id) - visitOrder.indexOf(b.id));
+const more = all
+  .filter((l) => !visited.has(l.id))
+  .sort((a, b) => a.data.nameKo.localeCompare(b.data.nameKo, 'ko'));
+---
+
+<Base title="교토 명소" tab="landmarks">
+  <h1>교토 명소</h1>
+  <p class="lead">현장에서 읽는 짧은 해설이에요.</p>
+
+  <h2>우리가 가는 곳</h2>
+  {going.map((l) => <LandmarkCard landmark={l} day={visited.get(l.id)} />)}
+
+  {
+    more.length > 0 && (
+      <>
+        <h2>더 알아보기</h2>
+        <p class="lead">일정에는 없지만 시간이 나면 들러 볼 만한 곳이에요.</p>
+        {more.map((l) => (
+          <LandmarkCard landmark={l} />
+        ))}
+      </>
+    )
+  }
+</Base>
